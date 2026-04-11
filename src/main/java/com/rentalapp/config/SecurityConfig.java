@@ -47,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/profiles/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/profiles/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/agents/*/recommendations").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/listings").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/listings/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/amenities").permitAll()

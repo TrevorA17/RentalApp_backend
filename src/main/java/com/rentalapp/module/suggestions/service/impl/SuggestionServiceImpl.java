@@ -1,4 +1,4 @@
-package com.rentalapp.module.recommendations.service.impl;
+package com.rentalapp.module.suggestions.service.impl;
 
 import com.rentalapp.exception.ForbiddenException;
 import com.rentalapp.exception.ResourceNotFoundException;
@@ -6,18 +6,20 @@ import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
 import com.rentalapp.module.auth.repository.UserRepository;
 import com.rentalapp.module.inquiries.repository.InquiryRepository;
+import com.rentalapp.module.listings.dto.AmenityResponse;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
 import com.rentalapp.module.listings.entity.ApprovalStatus;
 import com.rentalapp.module.listings.entity.Listing;
 import com.rentalapp.module.listings.entity.ListingStatus;
 import com.rentalapp.module.listings.repository.ListingRepository;
+import com.rentalapp.module.media.dto.ListingMediaResponse;
 import com.rentalapp.module.media.entity.ListingMedia;
 import com.rentalapp.module.media.repository.ListingMediaRepository;
 import com.rentalapp.module.profiles.entity.Profile;
 import com.rentalapp.module.profiles.repository.ProfileRepository;
-import com.rentalapp.module.recommendations.dto.RecommendationResponse;
-import com.rentalapp.module.recommendations.service.RecommendationService;
 import com.rentalapp.module.saved.repository.SavedListingRepository;
+import com.rentalapp.module.suggestions.dto.SuggestedListingResponse;
+import com.rentalapp.module.suggestions.service.SuggestionService;
 import com.rentalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,11 +35,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class RecommendationServiceImpl implements RecommendationService {
+public class SuggestionServiceImpl implements SuggestionService {
     private final ListingRepository listingRepository;
     private final ListingMediaRepository listingMediaRepository;
     private final ProfileRepository profileRepository;
@@ -47,13 +48,13 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RecommendationResponse> getRecommendations(int limit) {
+    public List<SuggestedListingResponse> getSuggestedListings(int limit) {
         String userId = SecurityUtils.requireCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
 
         if (user.getRole() == Role.ADMIN) {
-            throw new ForbiddenException("Admins do not receive recommendations.");
+            throw new ForbiddenException("Admins do not receive listing suggestions.");
         }
 
         Profile profile = profileRepository.findByUserId(userId).orElse(null);
@@ -104,12 +105,18 @@ public class RecommendationServiceImpl implements RecommendationService {
         Map<String, List<ListingMedia>> mediaByListingId = getMediaByListingId(candidates);
 
         return candidates.stream()
-                .map(listing -> scoreListing(listing, mediaByListingId.getOrDefault(listing.getId(), List.of()),
-                        preferredCities, preferredAreas, preferredHouseTypes, preferredAmenities))
-                .sorted(Comparator.comparingInt(ScoredRecommendation::score).reversed()
-                        .thenComparing(ScoredRecommendation::publishedAt, Comparator.nullsLast(Comparator.reverseOrder())))
+                .map(listing -> scoreListing(
+                        listing,
+                        mediaByListingId.getOrDefault(listing.getId(), List.of()),
+                        preferredCities,
+                        preferredAreas,
+                        preferredHouseTypes,
+                        preferredAmenities
+                ))
+                .sorted(Comparator.comparingInt(ScoredSuggestion::score).reversed()
+                        .thenComparing(ScoredSuggestion::publishedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .limit(Math.max(1, Math.min(limit, 12)))
-                .map(scored -> RecommendationResponse.builder()
+                .map(scored -> SuggestedListingResponse.builder()
                         .listing(scored.listing())
                         .reason(scored.reason())
                         .score(scored.score())
@@ -139,7 +146,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         listing.getAmenities().forEach(amenity -> preferredAmenities.add(amenity.getId()));
     }
 
-    private ScoredRecommendation scoreListing(
+    private ScoredSuggestion scoreListing(
             Listing listing,
             List<ListingMedia> media,
             Set<String> preferredCities,
@@ -174,7 +181,7 @@ public class RecommendationServiceImpl implements RecommendationService {
                 .count();
         if (matchingAmenities > 0) {
             score += (int) Math.min(20, matchingAmenities * 5);
-            reasons.add("shares amenities you have viewed or saved");
+            reasons.add("shares amenities from your saved or viewed activity");
         }
 
         if (media.isEmpty()) {
@@ -192,7 +199,7 @@ public class RecommendationServiceImpl implements RecommendationService {
             reasons.add("fresh published listing");
         }
 
-        return new ScoredRecommendation(toSummary(listing, media), String.join(", ", reasons), score, listing.getPublishedAt());
+        return new ScoredSuggestion(toSummary(listing, media), String.join(", ", reasons), score, listing.getPublishedAt());
     }
 
     private Map<String, List<ListingMedia>> getMediaByListingId(List<Listing> listings) {
@@ -227,15 +234,17 @@ public class RecommendationServiceImpl implements RecommendationService {
                 .listingStatus(listing.getListingStatus())
                 .approvalStatus(listing.getApprovalStatus())
                 .ownerType(listing.getOwnerType())
-                .amenities(listing.getAmenities().stream().map(amenity -> com.rentalapp.module.listings.dto.AmenityResponse.builder()
-                        .id(amenity.getId())
-                        .name(amenity.getName())
-                        .slug(amenity.getSlug())
-                        .build()).toList())
+                .amenities(listing.getAmenities().stream()
+                        .map(amenity -> AmenityResponse.builder()
+                                .id(amenity.getId())
+                                .name(amenity.getName())
+                                .slug(amenity.getSlug())
+                                .build())
+                        .toList())
                 .thumbnailUrl(media.stream().min(Comparator.comparing(ListingMedia::getDisplayOrder)).map(ListingMedia::getMediaUrl).orElse(null))
                 .media(media.stream()
                         .sorted(Comparator.comparing(ListingMedia::getDisplayOrder))
-                        .map(item -> com.rentalapp.module.media.dto.ListingMediaResponse.builder()
+                        .map(item -> ListingMediaResponse.builder()
                                 .id(item.getId())
                                 .mediaType(item.getMediaType())
                                 .mediaUrl(item.getMediaUrl())
@@ -261,6 +270,6 @@ public class RecommendationServiceImpl implements RecommendationService {
                 .toList();
     }
 
-    private record ScoredRecommendation(ListingSummaryResponse listing, String reason, int score, Instant publishedAt) {
+    private record ScoredSuggestion(ListingSummaryResponse listing, String reason, int score, Instant publishedAt) {
     }
 }
