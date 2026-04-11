@@ -17,4 +17,14 @@ public final class SecurityUtils {
 
         return principal.getId();
     }
+
+    public static String getCurrentUserIdOrNull() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof AuthUserPrincipal principal)) {
+            return null;
+        }
+
+        return principal.getId();
+    }
 }
