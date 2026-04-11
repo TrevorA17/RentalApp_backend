@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the initial REST API surface for the Rental House Hunting Platform MVP. It is intended to align backend implementation and frontend integration before feature coding begins.
+This document describes the current backend API surface for the Rental House Hunting Platform MVP.
 
 Base path:
 
@@ -10,7 +10,9 @@ Base path:
 /api/v1
 ```
 
-## Response Conventions
+This document reflects the codebase as implemented now, not the earlier design-only version.
+
+## Response conventions
 
 ### Success response
 
@@ -27,13 +29,15 @@ Base path:
 ```json
 {
   "success": false,
-  "message": "Validation failed",
+  "code": "VALIDATION_ERROR",
+  "message": "Validation failed.",
   "errors": [
     {
       "field": "email",
-      "message": "Email is required"
+      "message": "Email is required."
     }
-  ]
+  ],
+  "timestamp": "2026-04-11T12:00:00Z"
 }
 ```
 
@@ -43,107 +47,41 @@ Base path:
 
 Registers a new user.
 
-Request:
-
-```json
-{
-  "email": "agent@example.com",
-  "password": "StrongPassword123!",
-  "role": "AGENT",
-  "fullName": "Sharon Akinyi"
-}
-```
-
-Response:
-
-```json
-{
-  "success": true,
-  "message": "Account created",
-  "data": {
-    "userId": "uuid",
-    "role": "AGENT"
-  }
-}
-```
-
 ### `POST /auth/login`
 
-Authenticates a user and returns JWT tokens.
-
-Request:
-
-```json
-{
-  "email": "agent@example.com",
-  "password": "StrongPassword123!"
-}
-```
-
-Response:
-
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "accessToken": "jwt",
-    "refreshToken": "jwt",
-    "user": {
-      "id": "uuid",
-      "email": "agent@example.com",
-      "role": "AGENT"
-    }
-  }
-}
-```
+Authenticates a user and returns access and refresh tokens.
 
 ### `GET /auth/me`
 
 Returns the authenticated user summary.
 
 Authorization:
-- Required
+- required
 
 ### `POST /auth/refresh`
 
-Refreshes the access token.
+Rotates a refresh token and returns a new token pair.
 
 ### `POST /auth/logout`
 
-Invalidates current session tokens if refresh-token tracking is implemented.
+Invalidates the submitted refresh token.
 
 ## Profiles
 
 ### `GET /profiles/me`
 
-Returns the authenticated user's profile.
+Returns the authenticated user profile.
 
 Authorization:
-- Required
+- required
 
 ### `PUT /profiles/me`
 
 Creates or updates the authenticated user's profile.
 
-Request:
-
-```json
-{
-  "fullName": "Sharon Akinyi",
-  "phoneNumber": "+254700000000",
-  "bio": "Independent letting agent",
-  "city": "Nairobi",
-  "serviceAreas": ["Kilimani", "Kileleshwa"],
-  "companyName": "Akinyi Homes",
-  "feeStructure": "One month rent",
-  "profilePhotoUrl": "https://..."
-}
-```
-
 ### `GET /profiles/{userId}`
 
-Returns public profile information for listing display or agent page rendering.
+Returns public profile information.
 
 ## Listings
 
@@ -152,8 +90,8 @@ Returns public profile information for listing display or agent page rendering.
 Creates a draft listing.
 
 Authorization:
-- Required
-- Roles: `AGENT`, `LANDLORD`
+- required
+- roles: `AGENT`, `LANDLORD`
 
 Request:
 
@@ -171,65 +109,42 @@ Request:
   "houseType": "APARTMENT",
   "furnished": false,
   "availabilityStatus": "AVAILABLE_NOW",
-  "amenityIds": ["uuid-1", "uuid-2"]
+  "amenityIds": ["uuid-1", "uuid-2"],
+  "media": [
+    {
+      "mediaType": "IMAGE",
+      "mediaUrl": "https://example.com/front.jpg",
+      "caption": "Front view"
+    }
+  ]
 }
 ```
 
-### `GET /listings/{listingId}`
-
-Returns listing detail.
-
-Public endpoint, but only for published and approved listings unless owner or admin is requesting.
+Current media behavior:
+- media is provided as URL-based items in the listing payload
+- there is no standalone upload endpoint in the current implementation
 
 ### `PUT /listings/{listingId}`
 
 Updates an existing listing.
 
-Authorization:
-- Required
-- Owner or admin only
-
 ### `POST /listings/{listingId}/publish`
 
-Marks a listing ready for publishing.
+Publishes a listing.
 
-Authorization:
-- Required
-- Roles: `AGENT`, `LANDLORD`
+### `GET /listings/{listingId}`
 
-Behavior:
-- Validates completeness threshold
-- Sets moderation state according to chosen approval policy
-
-### `POST /listings/{listingId}/unpublish`
-
-Removes listing from public visibility.
-
-### `POST /listings/{listingId}/archive`
-
-Archives listing.
+Returns listing detail.
 
 ### `GET /my/listings`
 
 Returns listings owned by the authenticated user.
 
-Authorization:
-- Required
-
-Query params:
-- `status`
-- `approvalStatus`
-- `page`
-- `size`
-
-## Search
-
 ### `GET /listings`
 
 Public listing search endpoint.
 
-Query params:
-
+Current query params:
 - `city`
 - `area`
 - `minPrice`
@@ -238,61 +153,32 @@ Query params:
 - `bathrooms`
 - `houseType`
 - `furnished`
-- `availabilityStatus`
 - `amenities`
-- `sort`
-- `page`
-- `size`
 
-Response item shape:
-
-```json
-{
-  "id": "uuid",
-  "title": "Modern 1 Bedroom Apartment",
-  "rentAmount": 35000,
-  "depositAmount": 35000,
-  "agentFeeAmount": 35000,
-  "city": "Nairobi",
-  "area": "Kilimani",
-  "bedrooms": 1,
-  "bathrooms": 1,
-  "houseType": "APARTMENT",
-  "furnished": false,
-  "availabilityStatus": "AVAILABLE_NOW",
-  "thumbnailUrl": "https://...",
-  "poster": {
-    "userId": "uuid",
-    "name": "Sharon Akinyi",
-    "role": "AGENT",
-    "verificationStatus": "VERIFIED"
-  }
-}
-```
-
-## Amenities
+Current limitation:
+- pagination and sorting are not yet implemented
 
 ### `GET /amenities`
 
-Returns available amenity options for filters and listing forms.
+Returns available amenity options.
 
 ## Saved Listings
 
-### `POST /saved-listings/{listingId}`
+### `POST /listings/{listingId}/save`
 
-Saves a listing for the authenticated renter.
+Saves a listing.
 
-Authorization:
-- Required
-- Role: `RENTER`
-
-### `DELETE /saved-listings/{listingId}`
+### `DELETE /listings/{listingId}/save`
 
 Unsaves a listing.
 
 ### `GET /saved-listings`
 
-Returns saved listings for the authenticated renter.
+Returns saved listings for the authenticated user.
+
+### `GET /saved-listings/ids`
+
+Returns saved listing ids for quick UI state checks.
 
 ## Inquiries
 
@@ -300,227 +186,140 @@ Returns saved listings for the authenticated renter.
 
 Creates an inquiry for a listing.
 
-Authorization:
-- Required
-- Role: `RENTER`
-
-Request:
-
-```json
-{
-  "message": "I am interested in viewing this house this weekend.",
-  "contactName": "Kevin Otieno",
-  "contactPhone": "+254711111111"
-}
-```
-
 ### `GET /inquiries/sent`
 
-Returns inquiries created by the authenticated renter.
-
-Authorization:
-- Required
+Returns inquiries sent by the authenticated user.
 
 ### `GET /inquiries/received`
 
 Returns inquiries received by the authenticated listing owner.
 
-Authorization:
-- Required
-- Roles: `AGENT`, `LANDLORD`
-
 ### `PATCH /inquiries/{inquiryId}/status`
 
 Updates inquiry status.
 
-Request:
+## Agent Recommendations
 
-```json
-{
-  "status": "CONTACTED"
-}
-```
-
-## Recommendations
+In the current product vocabulary, `recommendations` means public agent testimonials or reviews.
 
 ### `POST /agents/{agentUserId}/recommendations`
 
-Creates a recommendation for an agent profile.
+Creates a public recommendation for an agent profile.
 
 Authorization:
-- Required
+- required
 
 Request:
 
 ```json
 {
   "rating": 5,
-  "comment": "Professional and transparent throughout the process."
+  "comment": "Professional, responsive, and transparent throughout the process."
 }
 ```
 
+Current MVP rules:
+- target user must be an `AGENT`
+- author cannot recommend their own profile
+- admin accounts cannot submit recommendations
+- one recommendation per author per agent
+- newly created recommendations are currently stored as approved in the MVP flow
+
 ### `GET /agents/{agentUserId}/recommendations`
 
-Returns visible recommendations for the agent.
+Returns public approved recommendations for the agent profile.
+
+## Suggestions
+
+Suggestions are personalized listing picks for signed-in users. They are not agent reviews and should not be called recommendations in product copy.
+
+### `GET /suggestions/listings`
+
+Returns personalized listing suggestions.
+
+Authorization:
+- required
+
+Query params:
+- `limit`
 
 ## Reports
 
 ### `POST /reports`
 
-Creates a content or fraud report.
+Creates a report on a listing or user.
 
 Authorization:
-- Required
-
-Request:
-
-```json
-{
-  "listingId": "uuid",
-  "reportedUserId": "uuid",
-  "reason": "SUSPICIOUS_LISTING",
-  "details": "The photos appear duplicated from another post."
-}
-```
+- required
 
 ## Admin Moderation
 
 ### `GET /admin/listings`
 
-Returns listings for moderation review.
-
-Authorization:
-- Required
-- Role: `ADMIN`
-
-Query params:
-- `approvalStatus`
-- `listingStatus`
-- `page`
-- `size`
+Returns listings for moderation.
 
 ### `PATCH /admin/listings/{listingId}/approval`
 
-Approves or rejects a listing.
-
-Request:
-
-```json
-{
-  "approvalStatus": "APPROVED",
-  "notes": "Listing meets requirements"
-}
-```
-
-### `PATCH /admin/listings/{listingId}/disable`
-
-Disables a listing.
+Updates listing approval status.
 
 ### `GET /admin/reports`
 
 Returns submitted reports.
 
-### `PATCH /admin/reports/{reportId}`
+### `PATCH /admin/reports/{reportId}/status`
 
 Updates report status.
 
-### `PATCH /admin/users/{userId}/suspend`
+### `GET /admin/users`
 
-Suspends a user account.
+Returns users for moderation.
 
-## Media
+### `PATCH /admin/users/{userId}/status`
 
-### `POST /media/listings/{listingId}`
+Updates user status.
 
-Uploads listing media.
+### `GET /admin/recommendations`
 
-Authorization:
-- Required
-- Owner or admin only
+Returns agent recommendations for moderation review.
 
-MVP note:
-- Can start with multipart image upload.
-- Production storage should be external to the application container.
+### `PATCH /admin/recommendations/{recommendationId}/approval`
 
-### `DELETE /media/{mediaId}`
+Updates recommendation approval status.
 
-Deletes listing media owned by the authenticated user or by admin.
+Current limitation:
+- moderation actions are not yet written to a dedicated audit-history table
 
 ## AI Assist
 
 ### `POST /ai/listings/description-enhance`
 
-Enhances listing description text.
+Generates assistive listing description output.
 
-Authorization:
-- Required
-- Roles: `AGENT`, `LANDLORD`
+Current implementation truth:
+- lightweight listing enhancement
+- heuristic fallback
+- request logging in Postgres
+- non-blocking behavior
 
-Request:
+Current non-truth:
+- the codebase does not yet provide full Spring AI + Ollama + Qdrant workflow integration
 
-```json
-{
-  "title": "Modern 1 Bedroom Apartment",
-  "description": "1 bedroom to let in Kilimani",
-  "city": "Nairobi",
-  "area": "Kilimani",
-  "bedrooms": 1,
-  "bathrooms": 1,
-  "houseType": "APARTMENT",
-  "furnished": false,
-  "amenities": ["Parking", "Borehole"]
-}
-```
-
-Response:
-
-```json
-{
-  "success": true,
-  "message": "AI suggestion generated",
-  "data": {
-    "enhancedDescription": "Well-maintained 1-bedroom apartment in Kilimani with parking and reliable water supply.",
-    "summaryBullets": [
-      "1 bedroom, 1 bathroom",
-      "Located in Kilimani",
-      "Includes parking and borehole water"
-    ],
-    "missingInformationSuggestions": [
-      "Add monthly deposit amount",
-      "Clarify availability date"
-    ]
-  }
-}
-```
-
-Rules:
-- AI output is advisory only.
-- User must explicitly save accepted content.
-- AI failure must not block listing creation.
-
-## Initial Security Rules
-
-- JWT bearer authentication for protected endpoints
-- Role-based route guards
-- Owner checks for user-owned resources
-- Input validation on all write endpoints
-- File validation on upload endpoints
-
-## Initial Backend Module Mapping
+## Current backend module mapping
 
 - `/auth` -> `auth`
 - `/profiles` -> `profiles`
 - `/listings`, `/amenities` -> `listings`
-- `/saved-listings` -> `saved`
+- `/saved-listings` and listing save endpoints -> `saved`
 - `/inquiries` -> `inquiries`
 - `/agents/.../recommendations` -> `recommendations`
-- `/reports`, `/admin/...` -> `admin`
-- `/media` -> `media`
+- `/suggestions/...` -> `suggestions`
+- `/reports`, `/admin/...` -> `reports` and `admin`
+- listing media DTOs are currently handled through listing payloads
 - `/ai` -> `ai`
 
-## Open API Decisions
+## Not yet implemented
 
-- Whether refresh tokens are persisted server-side
-- Whether admin approval is mandatory before all public listing publishes
-- Whether recommendation posting is limited to renters only
-- Whether listing creation returns full entity or compact summary
+- standalone file-upload media endpoints
+- search pagination and sorting
+- moderation audit-history table
+- full AI provider/vector runtime integration

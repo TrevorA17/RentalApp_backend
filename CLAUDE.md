@@ -1,11 +1,14 @@
 # Claude Code Instructions for RentalApp
 
-Rental house hunting platform focused on long-term rental discovery. This file is the working coding guide for the backend repo and should stay aligned with the sibling frontend repo:
+Rental house hunting platform focused on rentals only.
 
-- Backend repo: `RentalApp_backend/`
-- Frontend repo: `RentalApp_Frontend/`
+Backend repo:
+- `RentalApp_backend/`
 
-Primary planning documents in this repo:
+Sibling frontend repo:
+- `RentalApp_Frontend/`
+
+Primary project docs:
 
 - [Rental_App_Final_Detailed_BRD.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\Rental_App_Final_Detailed_BRD.md)
 - [docs/MVP_Data_Model.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\docs\MVP_Data_Model.md)
@@ -13,9 +16,7 @@ Primary planning documents in this repo:
 - [docs/Frontend_Route_Map.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\docs\Frontend_Route_Map.md)
 - [plan.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\plan.md)
 
----
-
-## Product Boundaries
+## Product boundaries
 
 The MVP is for:
 
@@ -27,27 +28,33 @@ The MVP is for:
 - listing detail pages
 - saved listings
 - inquiry workflows
-- recommendations for agents
+- public agent recommendations/testimonials
+- personalized listing suggestions
 - reporting and moderation
 - AI-assisted listing enhancement
 
 The MVP is not for:
 
+- property sales
 - payments
-- tenancy agreement workflows
+- tenancy workflows
 - live chat
-- native mobile apps
-- full geospatial maps
-- advanced AI matching or fraud scoring
-- property sales or land sales
+- full map search
+- advanced fraud scoring
+- full AI infrastructure claims that are not yet implemented
 
-If a proposed implementation expands beyond the MVP, stop and justify it before coding.
+## Product terminology rules
 
----
+These names must stay consistent:
 
-## Architecture
+- `recommendations` = public agent testimonials/reviews on agent profiles
+- `suggestions` = personalized listing picks for signed-in users
 
-### Backend stack
+Do not reintroduce ambiguous naming.
+
+## Backend architecture
+
+Stack currently in use:
 
 - Java 21
 - Spring Boot 3.x
@@ -55,37 +62,21 @@ If a proposed implementation expands beyond the MVP, stop and justify it before 
 - Spring Data JPA
 - PostgreSQL
 - Flyway
-- Spring AI
-- Ollama integration later in MVP
 
-### System design
+Current AI truth:
 
-- Build as a modular monolith
-- Package by feature, not by technical layer only
-- Keep module boundaries clear from the start
+- lightweight assistive enhancement endpoint exists
+- request logging exists
+- full Spring AI + Ollama + Qdrant integration does not yet exist in code
+
+System design rules:
+
+- modular monolith
+- package by feature
+- clear module boundaries
 - AI must remain optional and non-blocking
-- Prefer strong conventions over ad hoc file placement
 
-### Planned backend modules
-
-- `auth`
-- `profiles`
-- `listings`
-- `saved`
-- `inquiries`
-- `recommendations`
-- `admin`
-- `media`
-- `ai`
-
-Shared infrastructure should live under folders such as:
-
-- `config`
-- `security`
-- `exception`
-- `common`
-
-Preferred structure:
+Preferred backend structure:
 
 - `module/<feature>/controller`
 - `module/<feature>/dto`
@@ -94,331 +85,151 @@ Preferred structure:
 - `module/<feature>/service`
 - `module/<feature>/service/impl`
 
-Do not create a flat package tree that mixes unrelated modules together.
+Shared infrastructure:
 
----
+- `config`
+- `security`
+- `exception`
+- `common`
 
-## Delivery Approach
+## Current backend modules
 
-Follow the module order in [plan.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\plan.md):
+- `auth`
+- `profiles`
+- `listings`
+- `saved`
+- `inquiries`
+- `recommendations`
+- `suggestions`
+- `admin`
+- `reports`
+- `media`
+- `ai`
 
-1. Shared foundations
-2. Auth
-3. Profiles
-4. Listings core
-5. Search and public discovery
-6. Saved listings
-7. Inquiries
-8. Media
-9. Recommendations
-10. Reports and admin moderation
-11. AI assist
+## Delivery approach
 
-Rules:
+The original MVP slices have been implemented. New work should focus on:
 
-- Build vertical slices across backend and frontend
-- Do not jump ahead to later modules when earlier dependencies are unstable
-- Frontend mocks are allowed temporarily, but replace them before a module is considered complete
-- Keep docs updated when contracts or data structures change
+1. documentation accuracy
+2. search quality
+3. moderation auditability
+4. deployment realism
+5. AI/provider decisions only when justified by code and product needs
 
----
+## API rules
 
-## API Rules
+- base path is `/api/v1`
+- all APIs should stay aligned with [docs/API_Contract_V1.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\docs\API_Contract_V1.md)
+- do not expose JPA entities directly
+- use DTOs for requests and responses
 
-### API shape
+### Current media contract
 
-- Base path is `/api/v1`
-- All request and response shapes should stay aligned with [docs/API_Contract_V1.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\docs\API_Contract_V1.md)
-- Do not expose JPA entities directly in responses
-- Use DTOs for both requests and responses
+- listing media is URL-based in listing create/update payloads
+- do not document or implement upload endpoints unless that workflow is intentionally introduced
 
-### Error handling policy
+### Current AI contract
 
-- User-facing error messages should originate from the backend
-- The frontend should display backend-provided messages rather than inventing conflicting ones
-- Validation errors should come from Jakarta Bean Validation where possible
-- Business rule violations should use typed custom exceptions and the global exception handler
+- AI enhancement is advisory only
+- AI failure must not block listing save/publish workflows
+- do not document Qdrant/Ollama integration as present unless code actually wires it
 
-### Response conventions
-
-Use a consistent wrapper for success responses and a consistent error structure for failures. Once introduced, all controllers should follow the same pattern.
-
----
-
-## Code Structure Rules
+## Code structure rules
 
 ### Controllers
 
-- Controllers are thin
-- Controllers handle routing, validation, authorization, and response mapping
-- Controllers do not contain business logic
-- Controllers should return a consistent API wrapper
-- Controllers should delegate all module behavior to services
+- thin
+- routing and validation only
+- no business logic
 
 ### Services
 
-- Services own business rules
-- Services control transactions
-- Services depend on interfaces or clean abstractions where useful
-- Prefer service interfaces plus implementations for module contracts
-- Write methods use `@Transactional`
-- Read methods can use `@Transactional(readOnly = true)` where appropriate
+- own business rules
+- own transactions
+- interfaces plus implementations where useful
 
 ### Repositories
 
-- Repositories handle persistence only
-- Do not bury business rules inside repository queries
-- Query methods should remain readable and explicit
-- Services should depend on repository contracts, not controller-facing shortcuts
-- Single-item reads should prefer `Optional<T>`
+- persistence only
+- no buried business rules
 
 ### DTOs
 
-- Request DTOs use Jakarta Bean Validation
-- Response DTOs are explicit and stable
-- Never return entity objects directly from controllers
-- Keep DTOs behavior-free
-- Validation messages are user-facing and should be written clearly
+- request DTOs use Jakarta validation
+- response DTOs are explicit
+- no entity leakage
 
 ### Entities
 
-- Entities represent persistent domain state
-- Keep entity logic minimal
-- Use string-backed enums in persistence
-- Default relationship loading to `LAZY`
-- Avoid entity methods that embed service-level business rules
-- Shared entity concerns should live in a common base entity where useful
+- persistent domain state only
+- string-backed enums
+- prefer `LAZY` relationships
 
 ### Dependency injection
 
-- Constructor injection only
-- Do not use field injection
-- Do not use `@Autowired` on fields
+- constructor injection only
 
-### SOLID application
+## Data and persistence rules
 
-- Single Responsibility: controllers route, services enforce rules, repositories persist, DTOs carry data
-- Open/Closed: extend behavior through new module services and DTOs instead of mutating unrelated contracts
-- Liskov Substitution: shared contracts such as service interfaces and base exceptions must remain substitutable
-- Interface Segregation: avoid god-services and oversized repository contracts
-- Dependency Inversion: higher-level business logic depends on abstractions, not concrete wiring
+- UUID primary keys
+- Flyway for schema changes
+- add new migrations instead of editing applied ones
+- use indexes where query patterns justify them
+- avoid over-normalization when a simpler MVP field is better
 
----
+### Current schema truths
 
-## Data and Persistence Rules
+- `agent_recommendations` exists
+- `refresh_tokens` exists
+- `listing_media` exists and stores media URLs
 
-The source of truth for the MVP schema is [docs/MVP_Data_Model.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\docs\MVP_Data_Model.md).
+### Known schema gaps
 
-### Entity and schema conventions
+- `moderation_actions` audit history table does not exist yet
+- search indexing can be improved
 
-- Use UUID primary keys
-- Persist enums as strings
-- Use Flyway for all schema changes
-- Do not manually change database structure outside migrations
-- Prefer nullable fields only when the business model genuinely allows missing data
-- Use column names and table names consistently and intentionally
-- Add indexes based on real query patterns, especially auth and listing search flows
-- Do not normalize prematurely when a single field is the better MVP tradeoff
+## Security rules
 
-### Normalization guidance
+- JWT-based auth
+- BCrypt password hashing
+- backend-enforced role and ownership rules
+- no trust in client-provided role or ownership
 
-Avoid over-normalization in MVP design.
+### Agent recommendation rules
 
-Good examples for this project:
+- only authenticated users can submit
+- self-recommendations are blocked
+- admin users cannot submit public recommendations
+- one recommendation per author per agent in MVP
 
-- `profiles.service_areas` can remain a simple field initially instead of a separate table
-- fee structure text does not need a dedicated fee-rule engine
-- role stays directly on the user account in MVP
+## Testing expectations
 
-Normalize when there is a clear integrity, querying, or ownership reason, not because a field could theoretically become its own table one day.
-
-### Migration rules
-
-- Every schema change must have a Flyway migration
-- Migrations should be idempotent where practical
-- Never rename or remove enum values casually
-- Schema changes must reflect the documented domain model or explicitly update the docs
-- Never edit an already-applied migration to change behavior retroactively
-- Fix migration mistakes with a new migration
-- Create schema in a sequence that respects module dependencies
-
-### Query and indexing rules
-
-- Search-related fields must be indexed deliberately
-- Public listing queries must exclude unpublished, archived, rejected, and disabled records as required by business rules
-- Ownership and role restrictions must be enforced server-side, never only in frontend logic
-
----
-
-## Security Rules
-
-- Use JWT-based authentication
-- Hash passwords with a secure algorithm such as BCrypt
-- Protect all non-public endpoints
-- Enforce role checks in backend code
-- Enforce owner checks for user-owned resources
-- Validate all upload inputs for type and size
-- Never trust role or ownership information from the client
-
-Public endpoints should remain limited to what the BRD allows, mainly listing browse, listing detail, and public profile views.
-
----
-
-## Module-Specific Rules
-
-### Auth
-
-- One account has one primary role in MVP
-- Admin creation is internal only
-- Normalize emails before persistence and comparison
-- Password hashes only, never raw passwords
-- JWT claims should stay minimal and relevant to the module
-
-### Profiles
-
-- Agent-only fields must not leak into renter behavior without validation
-- Verification status is controlled by backend rules, not arbitrary client input
-
-### Listings
-
-- Only agents and landlords can create listings
-- Only listing owners or admins can edit listing records
-- Publish should enforce completeness rules
-- Agent fee visibility is mandatory where applicable
-
-### Search
-
-- Only approved and published listings appear publicly
-- Filters should be backed by real indexed fields
-
-### Saved listings
-
-- Only authenticated renters can save listings
-- Duplicate saves should be prevented at both service and database level
-
-### Inquiries
-
-- Inquiries are always tied to one listing
-- Sender and receiver visibility must be enforced
-- Status transitions should remain simple for MVP
-
-### Recommendations
-
-- Recommendation abuse must be manageable by moderation
-- Visibility should respect the moderation policy selected for MVP
-
-### Reports and moderation
-
-- Moderation decisions must be auditable
-- Disabled listings must disappear from public search immediately
-
-### AI assist
-
-- AI is assistive only
-- AI must never auto-publish content
-- AI failure must not break listing creation or editing flows
-- AI requests and outputs should be logged carefully
-
----
-
-## Testing Expectations
-
-Every module should include tests before it is marked complete.
-
-### Backend test priorities
+Every meaningful backend change should preserve:
 
 - controller validation behavior
 - service business rules
 - authorization and ownership checks
-- repository queries for important search flows
-- integration tests for critical module paths
-- auth flows should include duplicate email and invalid credential cases
-- security tests should confirm protected endpoints reject unauthenticated access
+- security expectations
 
-### Minimum module quality bar
+Existing backend tests are part of the quality baseline and should continue passing.
 
-- happy path works
-- obvious failure paths are covered
-- unauthorized access is rejected
-- invalid input is rejected
+## Documentation discipline
 
-Do not leave testing until the end of the project.
+When behavior changes:
 
----
+- update `docs/MVP_Data_Model.md`
+- update `docs/API_Contract_V1.md`
+- update `docs/Frontend_Route_Map.md`
+- update `plan.md`
+- update repo READMEs when setup or current-state claims change
 
-## Logging and Observability
+The docs must remain trustworthy.
 
-- Log critical operational events and failures
-- Do not log passwords, tokens, or sensitive personal data
-- AI request logging must balance observability with privacy
-- Error logs should be useful enough to debug production issues without leaking secrets
+## Decision heuristics
 
----
+Prefer:
 
-## Documentation Discipline
-
-When implementation changes the plan, schema, or contract:
-
-- update `docs/MVP_Data_Model.md` if the domain model changes
-- update `docs/API_Contract_V1.md` if endpoints or payloads change
-- update `docs/Frontend_Route_Map.md` if route design changes
-- update `plan.md` if module sequencing or scope changes materially
-
-The docs should remain trustworthy. Do not let code and docs drift apart.
-
----
-
-## Coding Conventions
-
-- Prefer clear, explicit code over clever code
-- Keep methods focused and short where practical
-- Name classes and methods after business intent, not framework mechanics
-- Use `BigDecimal` for monetary values
-- Normalize and validate user input at boundaries
-- Keep comments rare and useful
-- Avoid premature abstractions unless multiple modules already need them
-- Use proper imports instead of fully qualified class names inline
-- Prefer builder-style response DTO creation where it improves readability
-- Do not add logging noise; log only what helps operational debugging
-
-## Shared Backend Utilities
-
-Introduce shared infrastructure early and keep it consistent:
-
-- `ApiResponse<T>` for standard success responses
-- a global exception handler for consistent failure responses
-- a base exception hierarchy for auth, validation, forbidden, and not-found cases
-- shared security helpers only when they remove repetition cleanly
-
-Do not create a sprawling utility layer before repeated patterns actually exist.
-
----
-
-## Feature Development Flow
-
-For each backend module:
-
-1. Confirm the business rules in the BRD and `plan.md`
-2. Update docs if the design changed
-3. Write or update Flyway migration
-4. Create or update entities
-5. Create repositories
-6. Create request and response DTOs
-7. Implement service layer
-8. Implement controller layer
-9. Add tests
-10. Integrate with frontend and remove temporary mocks
-
----
-
-## Decision Heuristics
-
-When unsure, prefer:
-
-- simpler implementation over speculative extensibility
-- explicit business rules over hidden conventions
-- server-enforced validation over frontend-only validation
-- module cohesion over shared utility sprawl
-- delivery of core rental workflows over peripheral features
-
-If a tradeoff conflicts with the BRD, the BRD wins unless deliberately revised.
+- precise product naming over overloaded terms
+- simpler implementation over speculative architecture
+- honest documentation over aspirational documentation
+- real rental workflow value over peripheral feature creep

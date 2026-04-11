@@ -2,261 +2,173 @@
 
 ## Purpose
 
-This document defines the initial domain model for the Rental House Hunting Platform MVP based on the BRD in [Rental_App_Final_Detailed_BRD.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\Rental_App_Final_Detailed_BRD.md).
+This document describes the current MVP data model for the Rental House Hunting Platform.
 
-The goal is to establish a stable backend data foundation before coding application logic or frontend screens.
+It reflects the implemented schema and the current product language:
 
-## Modeling Principles
+- `recommendations` = agent testimonials/reviews on public agent profiles
+- `suggestions` = personalized listing picks
 
-- Use a modular monolith.
-- Keep the schema normalized where it improves integrity.
-- Prefer explicit enums for business-state fields.
-- Support moderation and auditability from the start.
-- Keep AI optional and non-blocking for core workflows.
-
-## Core Entities
+## Implemented core entities
 
 ### `users`
 
-Represents authenticated platform accounts.
+Authenticated accounts for renters, agents, landlords, and admins.
 
-Suggested fields:
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `email` | VARCHAR(255) | Unique, required |
-| `password_hash` | VARCHAR(255) | Required |
-| `role` | ENUM(Role) | `RENTER`, `AGENT`, `LANDLORD`, `ADMIN` |
-| `status` | VARCHAR(50) | Active or suspended state |
-| `email_verified` | BOOLEAN | Default `false` |
-| `created_at` | TIMESTAMP | Required |
-| `updated_at` | TIMESTAMP | Required |
-
-Rules:
-- One account has one primary role in MVP.
-- Admin accounts are created internally.
+Key fields:
+- `id`
+- `email`
+- `password_hash`
+- `full_name`
+- `role`
+- `status`
+- `email_verified`
+- `created_at`
+- `updated_at`
 
 ### `profiles`
 
-Represents user-facing profile information.
+Public-facing and editable profile data.
 
-Suggested fields:
+Key fields:
+- `user_id`
+- `full_name`
+- `phone_number`
+- `bio`
+- `profile_photo_url`
+- `city`
+- `service_areas`
+- `company_name`
+- `fee_structure`
+- `verification_status`
 
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `user_id` | UUID | FK to `users`, unique |
-| `full_name` | VARCHAR(150) | Required |
-| `phone_number` | VARCHAR(30) | Nullable |
-| `bio` | TEXT | Nullable |
-| `profile_photo_url` | TEXT | Nullable |
-| `city` | VARCHAR(120) | Nullable |
-| `service_areas` | TEXT | Nullable for renter, useful for agent |
-| `company_name` | VARCHAR(150) | Optional for agent |
-| `fee_structure` | TEXT | Optional for agent |
-| `verification_status` | ENUM(VerificationStatus) | Default unverified |
-| `created_at` | TIMESTAMP | Required |
-| `updated_at` | TIMESTAMP | Required |
-
-Rules:
-- Every user should eventually have one profile.
-- `service_areas`, `company_name`, and `fee_structure` are primarily for agents.
-
-### `listings`
-
-Represents rental properties posted by agents or landlords.
-
-Suggested fields:
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `owner_user_id` | UUID | FK to `users` |
-| `title` | VARCHAR(200) | Required |
-| `description` | TEXT | Required |
-| `rent_amount` | DECIMAL(12,2) | Required |
-| `deposit_amount` | DECIMAL(12,2) | Nullable |
-| `agent_fee_amount` | DECIMAL(12,2) | Nullable |
-| `city` | VARCHAR(120) | Required |
-| `area` | VARCHAR(150) | Required |
-| `bedrooms` | INTEGER | Required |
-| `bathrooms` | INTEGER | Required |
-| `house_type` | ENUM(HouseType) | Required |
-| `furnished` | BOOLEAN | Required |
-| `availability_status` | ENUM(AvailabilityStatus) | Required |
-| `listing_status` | ENUM(ListingStatus) | Draft, published, etc. |
-| `approval_status` | ENUM(ApprovalStatus) | Pending, approved, rejected |
-| `owner_type` | ENUM(Role) | Must be `AGENT` or `LANDLORD` |
-| `published_at` | TIMESTAMP | Nullable |
-| `archived_at` | TIMESTAMP | Nullable |
-| `created_at` | TIMESTAMP | Required |
-| `updated_at` | TIMESTAMP | Required |
-
-Rules:
-- Only agents and landlords can own listings.
-- Public search only returns listings that are both published and approved.
-- Agent fee must be clearly stored and exposed when applicable.
-
-### `listing_media`
-
-Stores photos for a listing.
-
-Suggested fields:
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `listing_id` | UUID | FK to `listings` |
-| `media_type` | ENUM(MediaType) | MVP can start with `IMAGE` only |
-| `url` | TEXT | Required |
-| `sort_order` | INTEGER | Default `0` |
-| `created_at` | TIMESTAMP | Required |
-
-Rules:
-- Validate file type and size before persistence.
-- Prefer storing external object-storage URLs rather than binary blobs in Postgres.
+Current MVP note:
+- `service_areas` remains a simple text field
 
 ### `amenities`
 
-Reference table for available amenities.
+Reference table for listing amenities.
 
-Suggested fields:
+### `listings`
 
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `name` | VARCHAR(100) | Unique |
-| `slug` | VARCHAR(100) | Unique |
+Rental property listings posted by agents and landlords.
+
+Key fields:
+- `owner_user_id`
+- `title`
+- `description`
+- `rent_amount`
+- `deposit_amount`
+- `agent_fee_amount`
+- `city`
+- `area`
+- `bedrooms`
+- `bathrooms`
+- `house_type`
+- `furnished`
+- `availability_status`
+- `listing_status`
+- `approval_status`
+- `owner_type`
+- `published_at`
+- `archived_at`
+- `created_at`
+- `updated_at`
 
 ### `listing_amenities`
 
 Join table for listing-to-amenity relationships.
 
-Suggested fields:
+### `listing_media`
 
-| Field | Type | Notes |
-|---|---|---|
-| `listing_id` | UUID | FK to `listings` |
-| `amenity_id` | UUID | FK to `amenities` |
+Ordered media items attached to a listing.
 
-Composite key:
+Key fields:
 - `listing_id`
-- `amenity_id`
+- `media_type`
+- `media_url`
+- `caption`
+- `display_order`
+
+Current MVP truth:
+- media is URL-based
+- the system does not currently upload files directly
 
 ### `saved_listings`
 
-Tracks renter favorites.
-
-Suggested fields:
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `user_id` | UUID | FK to `users` |
-| `listing_id` | UUID | FK to `listings` |
-| `created_at` | TIMESTAMP | Required |
-
-Constraint:
-- Unique on `user_id` + `listing_id`
+Saved or favorited listing relationships.
 
 ### `inquiries`
 
-Stores renter interest in a specific listing.
+Renter interest and contact flow for a listing.
 
-Suggested fields:
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `listing_id` | UUID | FK to `listings` |
-| `sender_user_id` | UUID | FK to `users` |
-| `receiver_user_id` | UUID | FK to `users` |
-| `message` | TEXT | Required |
-| `status` | ENUM(InquiryStatus) | `NEW`, `CONTACTED`, `CLOSED` |
-| `contact_name` | VARCHAR(150) | Optional fallback |
-| `contact_phone` | VARCHAR(30) | Optional fallback |
-| `created_at` | TIMESTAMP | Required |
-| `updated_at` | TIMESTAMP | Required |
-
-Rules:
-- Sender must be a renter in MVP.
-- Inquiry is always tied to one listing.
-
-### `recommendations`
-
-Stores public recommendations on agent profiles.
-
-Suggested fields:
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `agent_user_id` | UUID | FK to `users` |
-| `author_user_id` | UUID | FK to `users` |
-| `rating` | SMALLINT | Optional, range 1-5 |
-| `comment` | TEXT | Required |
-| `approval_status` | ENUM(ApprovalStatus) | Moderation support |
-| `created_at` | TIMESTAMP | Required |
-| `updated_at` | TIMESTAMP | Required |
-
-Rules:
-- MVP allows simple text recommendation with optional rating.
-- Recommendations should be hidden until approved if moderation is strict.
+Key fields:
+- `listing_id`
+- `sender_user_id`
+- `receiver_user_id`
+- `message`
+- `status`
+- `contact_name`
+- `contact_phone`
+- `created_at`
+- `updated_at`
 
 ### `reports`
 
-Stores abuse or fraud reports.
+Abuse or trust reports on listings or users.
 
-Suggested fields:
+### `agent_recommendations`
 
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `reporter_user_id` | UUID | FK to `users` |
-| `listing_id` | UUID | Nullable FK to `listings` |
-| `reported_user_id` | UUID | Nullable FK to `users` |
-| `reason` | VARCHAR(120) | Required |
-| `details` | TEXT | Nullable |
-| `status` | VARCHAR(50) | Open, reviewed, resolved |
-| `created_at` | TIMESTAMP | Required |
-| `updated_at` | TIMESTAMP | Required |
+Public recommendations/testimonials left on agent profiles.
 
-### `moderation_actions`
+Key fields:
+- `agent_user_id`
+- `author_user_id`
+- `rating`
+- `comment`
+- `approval_status`
+- `created_at`
+- `updated_at`
 
-Audit trail for admin decisions.
-
-Suggested fields:
-
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `admin_user_id` | UUID | FK to `users` |
-| `target_type` | VARCHAR(50) | `LISTING`, `USER`, `RECOMMENDATION`, `REPORT` |
-| `target_id` | UUID | Required |
-| `action` | VARCHAR(50) | Approve, reject, disable, suspend |
-| `notes` | TEXT | Nullable |
-| `created_at` | TIMESTAMP | Required |
+Current MVP rules:
+- target must be an agent
+- one recommendation per author per agent
+- author cannot recommend self
+- moderation compatibility exists through `approval_status`
 
 ### `ai_request_logs`
 
-Stores AI request/response metadata for observability.
+Audit and observability for AI assist requests.
 
-Suggested fields:
+### `refresh_tokens`
 
-| Field | Type | Notes |
-|---|---|---|
-| `id` | UUID | Primary key |
-| `user_id` | UUID | FK to `users` |
-| `listing_id` | UUID | Nullable FK to `listings` |
-| `feature_name` | VARCHAR(100) | E.g. `DESCRIPTION_ENHANCER` |
-| `input_payload` | TEXT | Redact sensitive data if needed |
-| `output_payload` | TEXT | Generated result |
-| `status` | VARCHAR(50) | Success or failure |
-| `error_message` | TEXT | Nullable |
-| `created_at` | TIMESTAMP | Required |
+Persisted refresh token lifecycle for auth hardening.
 
-## Enum Definitions
+## Current personalized suggestions design
+
+Personalized listing suggestions do not currently have their own dedicated table.
+
+They are generated from:
+- profile data
+- saved listings
+- inquiries
+- published listing inventory
+
+This is intentional for MVP simplicity.
+
+## Key relationships
+
+- one `user` has one `profile`
+- one `user` can own many `listings`
+- one `listing` has many `listing_media`
+- one `listing` has many `amenities` through `listing_amenities`
+- one `user` can save many listings through `saved_listings`
+- one `listing` can receive many `inquiries`
+- one `agent` can receive many `agent_recommendations`
+- one `user` can author many `agent_recommendations`
+- one `listing` or `user` can have many `reports`
+
+## Enums in use
 
 ### `Role`
 
@@ -295,9 +207,14 @@ Suggested fields:
 - `APPROVED`
 - `REJECTED`
 
+Used by:
+- listings
+- agent recommendations
+
 ### `MediaType`
 
 - `IMAGE`
+- `VIDEO`
 
 ### `InquiryStatus`
 
@@ -311,73 +228,44 @@ Suggested fields:
 - `PENDING`
 - `VERIFIED`
 
-## Key Relationships
+### `ReportStatus`
 
-- One `user` has one `profile`.
-- One `user` can own many `listings`.
-- One `listing` has many `listing_media`.
-- One `listing` has many `amenities` through `listing_amenities`.
-- One `renter` can save many listings through `saved_listings`.
-- One `listing` can receive many `inquiries`.
-- One `agent` can receive many `recommendations`.
-- One `listing` or `user` can have many `reports`.
+- `OPEN`
+- `RESOLVED`
+- `DISMISSED`
 
-## Index Recommendations
+## Implemented migration order
 
-Create indexes early for query-heavy fields:
+1. `V1__create_auth_schema.sql`
+2. `V2__create_profiles_schema.sql`
+3. `V3__create_listings_schema.sql`
+4. `V4__create_saved_listings_schema.sql`
+5. `V5__create_inquiries_schema.sql`
+6. `V6__create_listing_media_schema.sql`
+7. `V7__create_reports_schema.sql`
+8. `V8__create_ai_request_logs_schema.sql`
+9. `V9__create_refresh_tokens_schema.sql`
+10. `V10__create_agent_recommendations_schema.sql`
 
-- `users.email`
-- `profiles.user_id`
-- `listings.owner_user_id`
-- `listings.city`
-- `listings.area`
-- `listings.rent_amount`
-- `listings.bedrooms`
-- `listings.bathrooms`
-- `listings.house_type`
-- `listings.availability_status`
-- `listings.listing_status`
-- `listings.approval_status`
-- `saved_listings.user_id`
-- `saved_listings.listing_id`
-- `inquiries.sender_user_id`
-- `inquiries.receiver_user_id`
-- `inquiries.listing_id`
-- `recommendations.agent_user_id`
-- `reports.status`
+## Current indexing truth
 
-## Suggested Module Ownership
+Already present in schema:
+- auth email index
+- listing owner index
+- listing city index
+- listing area index
+- listing status index
+- listing approval index
+- report indexes
+- agent recommendation public/admin lookup indexes
 
-- `auth`: `users`, auth tokens, password policy
-- `profiles`: `profiles`
-- `listings`: `listings`, `listing_media`, `amenities`, `listing_amenities`
-- `saved`: `saved_listings`
-- `inquiries`: `inquiries`
-- `recommendations`: `recommendations`
-- `admin`: `reports`, `moderation_actions`
-- `ai`: `ai_request_logs`
+Known gap:
+- public listing search still needs stronger indexing for price and filter-heavy fields
+- pagination and sorting support are not yet implemented
 
-## First Migration Order
+## Not yet implemented
 
-1. Enum types
-2. `users`
-3. `profiles`
-4. `amenities`
-5. `listings`
-6. `listing_media`
-7. `listing_amenities`
-8. `saved_listings`
-9. `inquiries`
-10. `recommendations`
-11. `reports`
-12. `moderation_actions`
-13. `ai_request_logs`
-
-## Open Setup Decisions
-
-These still need confirmation before implementation is locked:
-
-- Whether first-time listing publish requires admin approval
-- Whether recommendations are auto-visible or moderated first
-- Whether `service_areas` should later be normalized into a separate table
-- Which media storage provider to use in production
+- dedicated moderation action audit table
+- dedicated suggestions table
+- real file-upload storage flow
+- vector database integration

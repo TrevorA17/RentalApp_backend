@@ -4,20 +4,178 @@ Spring Boot backend for the Rental House Hunting Platform MVP.
 
 ## Current status
 
-Phase 0 and Module 1 scaffold:
+This repo is no longer scaffold-only. The backend currently implements:
 
-- Maven project foundation
-- shared API response and exception handling
-- JWT security scaffold
-- auth module with register, login, and me endpoints
-- Flyway auth migration
-- Docker Compose for local Postgres
+- JWT auth with access and refresh tokens
+- profile management
+- rental listing creation, editing, publishing, and public browse
+- amenity support
+- URL-based listing media embedded in listing create/update payloads
+- saved listings
+- renter inquiries
+- agent recommendations/testimonials on public agent profiles
+- listing suggestions for signed-in users
+- reports and admin moderation
+- AI-assisted listing description enhancement with request logging
+- Flyway-managed schema migrations
+- backend test coverage for core controllers, services, and security
+
+## Stack
+
+- Java 21
+- Spring Boot 3.4
+- Spring Security
+- Spring Data JPA
+- PostgreSQL
+- Flyway
+
+## What is implemented now
+
+### Auth
+
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/logout`
+
+### Profiles
+
+- `GET /api/v1/profiles/me`
+- `PUT /api/v1/profiles/me`
+- `GET /api/v1/profiles/{userId}`
+
+### Listings and search
+
+- `GET /api/v1/listings`
+- `GET /api/v1/listings/{listingId}`
+- `POST /api/v1/listings`
+- `PUT /api/v1/listings/{listingId}`
+- `POST /api/v1/listings/{listingId}/publish`
+- `GET /api/v1/my/listings`
+- `GET /api/v1/amenities`
+
+### Saved listings
+
+- `POST /api/v1/listings/{listingId}/save`
+- `DELETE /api/v1/listings/{listingId}/save`
+- `GET /api/v1/saved-listings`
+- `GET /api/v1/saved-listings/ids`
+
+### Inquiries
+
+- `POST /api/v1/listings/{listingId}/inquiries`
+- `GET /api/v1/inquiries/sent`
+- `GET /api/v1/inquiries/received`
+- `PATCH /api/v1/inquiries/{inquiryId}/status`
+
+### Agent trust
+
+- `POST /api/v1/agents/{agentUserId}/recommendations`
+- `GET /api/v1/agents/{agentUserId}/recommendations`
+
+### Personalized listing suggestions
+
+- `GET /api/v1/suggestions/listings`
+
+### Reports and moderation
+
+- `POST /api/v1/reports`
+- `GET /api/v1/admin/listings`
+- `PATCH /api/v1/admin/listings/{listingId}/approval`
+- `GET /api/v1/admin/reports`
+- `PATCH /api/v1/admin/reports/{reportId}/status`
+- `GET /api/v1/admin/users`
+- `PATCH /api/v1/admin/users/{userId}/status`
+- `GET /api/v1/admin/recommendations`
+- `PATCH /api/v1/admin/recommendations/{recommendationId}/approval`
+
+### AI assist
+
+- `POST /api/v1/ai/listings/description-enhance`
+
+Current AI behavior is intentionally lightweight:
+
+- assistive only
+- heuristic fallback implementation
+- request logging to Postgres
+
+This repo does not yet contain full Spring AI, Ollama, or Qdrant integration.
+
 ## Configuration
 
-The backend now uses Spring profiles with `local` as the default profile.
+The backend uses Spring profiles with `local` as the default.
 
-- `application.yml` contains shared defaults and environment-variable based production config
-- `application-local.yml` contains safe local development defaults
-- `application-prod.yml` is the production profile baseline
+- `application.yml`: shared config and env-backed production settings
+- `application-local.yml`: safe local defaults
+- `application-prod.yml`: production baseline
 
-For local setup, create a `.env` from [.env.example](./.env.example) or export the variables in your shell before starting the app.
+Environment templates:
+
+- [.env.example](./.env.example)
+
+Key local defaults:
+
+- Postgres on `localhost:5433`
+- database: `rentalapp`
+- username: `postgres`
+- password: `postgres`
+
+## Local development
+
+### Start Postgres
+
+```powershell
+docker compose up -d
+```
+
+Current Docker support is limited to local Postgres only. This repo does not yet provide a full multi-service local stack for:
+
+- backend container
+- frontend container
+- Qdrant
+- Ollama
+
+### Run the backend
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+### Run tests
+
+```powershell
+.\mvnw.cmd test
+```
+
+## Database migrations
+
+Current migrations:
+
+- `V1__create_auth_schema.sql`
+- `V2__create_profiles_schema.sql`
+- `V3__create_listings_schema.sql`
+- `V4__create_saved_listings_schema.sql`
+- `V5__create_inquiries_schema.sql`
+- `V6__create_listing_media_schema.sql`
+- `V7__create_reports_schema.sql`
+- `V8__create_ai_request_logs_schema.sql`
+- `V9__create_refresh_tokens_schema.sql`
+- `V10__create_agent_recommendations_schema.sql`
+
+## Known limits
+
+- media is URL-based, not file-upload based
+- public listing search does not yet expose pagination or sorting
+- moderation audit history table is not implemented yet
+- AI infra beyond heuristic enhancement is not wired yet
+- Docker deployment is not production-complete yet
+
+## Source-of-truth docs
+
+- [Rental_App_Final_Detailed_BRD.md](./Rental_App_Final_Detailed_BRD.md)
+- [docs/MVP_Data_Model.md](./docs/MVP_Data_Model.md)
+- [docs/API_Contract_V1.md](./docs/API_Contract_V1.md)
+- [docs/Frontend_Route_Map.md](./docs/Frontend_Route_Map.md)
+- [plan.md](./plan.md)
+- [CLAUDE.md](./CLAUDE.md)
