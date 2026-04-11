@@ -8,6 +8,7 @@ import com.rentalapp.module.auth.dto.LoginRequest;
 import com.rentalapp.module.auth.dto.RegisterRequest;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
+import com.rentalapp.module.auth.entity.UserStatus;
 import com.rentalapp.module.auth.repository.UserRepository;
 import com.rentalapp.module.auth.service.AuthService;
 import com.rentalapp.security.JwtTokenProvider;
@@ -51,6 +52,10 @@ public class AuthServiceImpl implements AuthService {
         String normalizedEmail = request.getEmail().trim().toLowerCase();
         User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(AuthenticationException::invalidCredentials);
+
+        if (user.getStatus() == UserStatus.SUSPENDED) {
+            throw new AuthenticationException("AUTH_ACCOUNT_SUSPENDED", "This account has been suspended.");
+        }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw AuthenticationException.invalidCredentials();
