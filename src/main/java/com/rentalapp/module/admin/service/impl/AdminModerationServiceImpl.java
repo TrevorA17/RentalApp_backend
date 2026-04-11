@@ -5,7 +5,10 @@ import com.rentalapp.module.admin.dto.AdminListingResponse;
 import com.rentalapp.module.admin.dto.AdminUserResponse;
 import com.rentalapp.module.admin.dto.UpdateListingApprovalRequest;
 import com.rentalapp.module.admin.dto.UpdateUserStatusRequest;
+import com.rentalapp.module.admin.entity.ModerationActionType;
+import com.rentalapp.module.admin.entity.ModerationTargetType;
 import com.rentalapp.module.admin.service.AdminModerationService;
+import com.rentalapp.module.admin.service.ModerationAuditService;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
 import com.rentalapp.module.auth.repository.UserRepository;
@@ -26,6 +29,7 @@ import java.util.List;
 public class AdminModerationServiceImpl implements AdminModerationService {
     private final ListingRepository listingRepository;
     private final UserRepository userRepository;
+    private final ModerationAuditService moderationAuditService;
 
     @Override
     @Transactional(readOnly = true)
@@ -45,6 +49,7 @@ public class AdminModerationServiceImpl implements AdminModerationService {
         Listing listing = listingRepository.findWithOwnerUserAndAmenitiesById(listingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Listing not found."));
 
+        ApprovalStatus previousApprovalStatus = listing.getApprovalStatus();
         listing.setApprovalStatus(request.getApprovalStatus());
         if (request.getApprovalStatus() == ApprovalStatus.APPROVED) {
             listing.setListingStatus(ListingStatus.PUBLISHED);
@@ -52,7 +57,17 @@ public class AdminModerationServiceImpl implements AdminModerationService {
             listing.setListingStatus(ListingStatus.DRAFT);
         }
 
-        return toAdminListing(listingRepository.save(listing));
+        Listing savedListing = listingRepository.save(listing);
+        moderationAuditService.recordStatusChange(
+                ModerationTargetType.LISTING,
+                savedListing.getId(),
+                toListingActionType(previousApprovalStatus, savedListing.getApprovalStatus()),
+                previousApprovalStatus.name(),
+                savedListing.getApprovalStatus().name(),
+                null
+        );
+
+        return toAdminListing(savedListing);
     }
 
     @Override
@@ -102,5 +117,17 @@ public class AdminModerationServiceImpl implements AdminModerationService {
                 .status(user.getStatus())
                 .emailVerified(user.isEmailVerified())
                 .build();
+    }
+
+    private ModerationActionType toListingActionType(ApprovalStatus previousStatus, ApprovalStatus newStatus) {
+        if (newStatus == ApprovalStatus.APPROVED) {
+            return ModerationActionType.APPROVE;
+        }
+
+        if (newStatus == ApprovalStatus.REJECTED) {
+            return ModerationActionType.REJECT;
+        }
+
+        return previousStatus == newStatus ? ModerationActionType.STATUS_CHANGE : ModerationActionType.FLAG;
     }
 }

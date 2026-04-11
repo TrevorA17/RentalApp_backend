@@ -3,6 +3,9 @@ package com.rentalapp.module.recommendations.service.impl;
 import com.rentalapp.exception.ForbiddenException;
 import com.rentalapp.exception.ResourceNotFoundException;
 import com.rentalapp.exception.ValidationException;
+import com.rentalapp.module.admin.entity.ModerationActionType;
+import com.rentalapp.module.admin.entity.ModerationTargetType;
+import com.rentalapp.module.admin.service.ModerationAuditService;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
 import com.rentalapp.module.auth.repository.UserRepository;
@@ -25,6 +28,7 @@ import java.util.List;
 public class AgentRecommendationServiceImpl implements AgentRecommendationService {
     private final AgentRecommendationRepository agentRecommendationRepository;
     private final UserRepository userRepository;
+    private final ModerationAuditService moderationAuditService;
 
     @Override
     @Transactional
@@ -93,8 +97,18 @@ public class AgentRecommendationServiceImpl implements AgentRecommendationServic
         SecurityUtils.requireRole(Role.ADMIN);
         AgentRecommendation recommendation = agentRecommendationRepository.findById(recommendationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Recommendation not found."));
+        ApprovalStatus previousStatus = recommendation.getApprovalStatus();
         recommendation.setApprovalStatus(request.getApprovalStatus());
-        return toResponse(agentRecommendationRepository.save(recommendation));
+        AgentRecommendation savedRecommendation = agentRecommendationRepository.save(recommendation);
+        moderationAuditService.recordStatusChange(
+                ModerationTargetType.AGENT_RECOMMENDATION,
+                savedRecommendation.getId(),
+                toRecommendationActionType(previousStatus, savedRecommendation.getApprovalStatus()),
+                previousStatus.name(),
+                savedRecommendation.getApprovalStatus().name(),
+                null
+        );
+        return toResponse(savedRecommendation);
     }
 
     private String normalizeComment(String value) {
@@ -119,5 +133,17 @@ public class AgentRecommendationServiceImpl implements AgentRecommendationServic
                         .role(recommendation.getAuthorUser().getRole().name())
                         .build())
                 .build();
+    }
+
+    private ModerationActionType toRecommendationActionType(ApprovalStatus previousStatus, ApprovalStatus newStatus) {
+        if (newStatus == ApprovalStatus.APPROVED) {
+            return ModerationActionType.APPROVE;
+        }
+
+        if (newStatus == ApprovalStatus.REJECTED) {
+            return ModerationActionType.REJECT;
+        }
+
+        return previousStatus == newStatus ? ModerationActionType.STATUS_CHANGE : ModerationActionType.FLAG;
     }
 }

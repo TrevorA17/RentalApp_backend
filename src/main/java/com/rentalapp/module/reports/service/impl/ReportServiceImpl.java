@@ -2,6 +2,9 @@ package com.rentalapp.module.reports.service.impl;
 
 import com.rentalapp.exception.ResourceNotFoundException;
 import com.rentalapp.exception.ValidationException;
+import com.rentalapp.module.admin.entity.ModerationActionType;
+import com.rentalapp.module.admin.entity.ModerationTargetType;
+import com.rentalapp.module.admin.service.ModerationAuditService;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
 import com.rentalapp.module.auth.repository.UserRepository;
@@ -26,6 +29,7 @@ public class ReportServiceImpl implements ReportService {
     private final ReportRepository reportRepository;
     private final UserRepository userRepository;
     private final ListingRepository listingRepository;
+    private final ModerationAuditService moderationAuditService;
 
     @Override
     @Transactional
@@ -78,8 +82,18 @@ public class ReportServiceImpl implements ReportService {
         SecurityUtils.requireRole(Role.ADMIN);
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException("Report not found."));
+        String previousStatus = report.getStatus().name();
         report.setStatus(request.getStatus());
-        return toResponse(reportRepository.save(report));
+        Report savedReport = reportRepository.save(report);
+        moderationAuditService.recordStatusChange(
+                ModerationTargetType.REPORT,
+                savedReport.getId(),
+                toReportActionType(savedReport.getStatus()),
+                previousStatus,
+                savedReport.getStatus().name(),
+                null
+        );
+        return toResponse(savedReport);
     }
 
     private String normalize(String value) {
@@ -118,5 +132,13 @@ public class ReportServiceImpl implements ReportService {
                 .email(user.getEmail())
                 .role(user.getRole())
                 .build();
+    }
+
+    private ModerationActionType toReportActionType(com.rentalapp.module.reports.entity.ReportStatus newStatus) {
+        return switch (newStatus) {
+            case RESOLVED -> ModerationActionType.RESOLVE;
+            case DISMISSED -> ModerationActionType.REJECT;
+            case OPEN -> ModerationActionType.FLAG;
+        };
     }
 }
