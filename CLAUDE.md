@@ -64,6 +64,7 @@ If a proposed implementation expands beyond the MVP, stop and justify it before 
 - Package by feature, not by technical layer only
 - Keep module boundaries clear from the start
 - AI must remain optional and non-blocking
+- Prefer strong conventions over ad hoc file placement
 
 ### Planned backend modules
 
@@ -83,6 +84,17 @@ Shared infrastructure should live under folders such as:
 - `security`
 - `exception`
 - `common`
+
+Preferred structure:
+
+- `module/<feature>/controller`
+- `module/<feature>/dto`
+- `module/<feature>/entity`
+- `module/<feature>/repository`
+- `module/<feature>/service`
+- `module/<feature>/service/impl`
+
+Do not create a flat package tree that mixes unrelated modules together.
 
 ---
 
@@ -140,24 +152,33 @@ Use a consistent wrapper for success responses and a consistent error structure 
 - Controllers are thin
 - Controllers handle routing, validation, authorization, and response mapping
 - Controllers do not contain business logic
+- Controllers should return a consistent API wrapper
+- Controllers should delegate all module behavior to services
 
 ### Services
 
 - Services own business rules
 - Services control transactions
 - Services depend on interfaces or clean abstractions where useful
+- Prefer service interfaces plus implementations for module contracts
+- Write methods use `@Transactional`
+- Read methods can use `@Transactional(readOnly = true)` where appropriate
 
 ### Repositories
 
 - Repositories handle persistence only
 - Do not bury business rules inside repository queries
 - Query methods should remain readable and explicit
+- Services should depend on repository contracts, not controller-facing shortcuts
+- Single-item reads should prefer `Optional<T>`
 
 ### DTOs
 
 - Request DTOs use Jakarta Bean Validation
 - Response DTOs are explicit and stable
 - Never return entity objects directly from controllers
+- Keep DTOs behavior-free
+- Validation messages are user-facing and should be written clearly
 
 ### Entities
 
@@ -165,12 +186,22 @@ Use a consistent wrapper for success responses and a consistent error structure 
 - Keep entity logic minimal
 - Use string-backed enums in persistence
 - Default relationship loading to `LAZY`
+- Avoid entity methods that embed service-level business rules
+- Shared entity concerns should live in a common base entity where useful
 
 ### Dependency injection
 
 - Constructor injection only
 - Do not use field injection
 - Do not use `@Autowired` on fields
+
+### SOLID application
+
+- Single Responsibility: controllers route, services enforce rules, repositories persist, DTOs carry data
+- Open/Closed: extend behavior through new module services and DTOs instead of mutating unrelated contracts
+- Liskov Substitution: shared contracts such as service interfaces and base exceptions must remain substitutable
+- Interface Segregation: avoid god-services and oversized repository contracts
+- Dependency Inversion: higher-level business logic depends on abstractions, not concrete wiring
 
 ---
 
@@ -185,6 +216,21 @@ The source of truth for the MVP schema is [docs/MVP_Data_Model.md](C:\Users\Trev
 - Use Flyway for all schema changes
 - Do not manually change database structure outside migrations
 - Prefer nullable fields only when the business model genuinely allows missing data
+- Use column names and table names consistently and intentionally
+- Add indexes based on real query patterns, especially auth and listing search flows
+- Do not normalize prematurely when a single field is the better MVP tradeoff
+
+### Normalization guidance
+
+Avoid over-normalization in MVP design.
+
+Good examples for this project:
+
+- `profiles.service_areas` can remain a simple field initially instead of a separate table
+- fee structure text does not need a dedicated fee-rule engine
+- role stays directly on the user account in MVP
+
+Normalize when there is a clear integrity, querying, or ownership reason, not because a field could theoretically become its own table one day.
 
 ### Migration rules
 
@@ -192,6 +238,9 @@ The source of truth for the MVP schema is [docs/MVP_Data_Model.md](C:\Users\Trev
 - Migrations should be idempotent where practical
 - Never rename or remove enum values casually
 - Schema changes must reflect the documented domain model or explicitly update the docs
+- Never edit an already-applied migration to change behavior retroactively
+- Fix migration mistakes with a new migration
+- Create schema in a sequence that respects module dependencies
 
 ### Query and indexing rules
 
@@ -222,6 +271,8 @@ Public endpoints should remain limited to what the BRD allows, mainly listing br
 - One account has one primary role in MVP
 - Admin creation is internal only
 - Normalize emails before persistence and comparison
+- Password hashes only, never raw passwords
+- JWT claims should stay minimal and relevant to the module
 
 ### Profiles
 
@@ -281,6 +332,8 @@ Every module should include tests before it is marked complete.
 - authorization and ownership checks
 - repository queries for important search flows
 - integration tests for critical module paths
+- auth flows should include duplicate email and invalid credential cases
+- security tests should confirm protected endpoints reject unauthenticated access
 
 ### Minimum module quality bar
 
@@ -324,6 +377,20 @@ The docs should remain trustworthy. Do not let code and docs drift apart.
 - Normalize and validate user input at boundaries
 - Keep comments rare and useful
 - Avoid premature abstractions unless multiple modules already need them
+- Use proper imports instead of fully qualified class names inline
+- Prefer builder-style response DTO creation where it improves readability
+- Do not add logging noise; log only what helps operational debugging
+
+## Shared Backend Utilities
+
+Introduce shared infrastructure early and keep it consistent:
+
+- `ApiResponse<T>` for standard success responses
+- a global exception handler for consistent failure responses
+- a base exception hierarchy for auth, validation, forbidden, and not-found cases
+- shared security helpers only when they remove repetition cleanly
+
+Do not create a sprawling utility layer before repeated patterns actually exist.
 
 ---
 
