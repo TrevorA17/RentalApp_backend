@@ -16,6 +16,8 @@ public class AuthUserPrincipal implements UserDetails {
     private final String id;
     private final String email;
     private final Role role;
+    private final String tokenId;
+    private final String tokenType;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
