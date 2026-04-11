@@ -5,6 +5,7 @@ import com.rentalapp.module.listings.entity.ApprovalStatus;
 import com.rentalapp.module.listings.entity.AvailabilityStatus;
 import com.rentalapp.module.listings.entity.HouseType;
 import com.rentalapp.module.listings.entity.ListingStatus;
+import com.rentalapp.module.media.dto.ListingMediaResponse;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -30,4 +31,6 @@ public class ListingSummaryResponse {
     private final ApprovalStatus approvalStatus;
     private final Role ownerType;
     private final List<AmenityResponse> amenities;
+    private final String thumbnailUrl;
+    private final List<ListingMediaResponse> media;
 }

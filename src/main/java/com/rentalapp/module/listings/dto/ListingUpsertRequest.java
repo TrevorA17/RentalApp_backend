@@ -2,6 +2,7 @@ package com.rentalapp.module.listings.dto;
 
 import com.rentalapp.module.listings.entity.AvailabilityStatus;
 import com.rentalapp.module.listings.entity.HouseType;
+import com.rentalapp.module.media.dto.ListingMediaRequest;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -57,4 +58,6 @@ public class ListingUpsertRequest {
 
     @NotEmpty(message = "At least one amenity should be selected.")
     private List<String> amenityIds;
+
+    private List<ListingMediaRequest> media;
 }

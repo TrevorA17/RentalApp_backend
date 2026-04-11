@@ -3,6 +3,7 @@ package com.rentalapp.module.listings.entity;
 import com.rentalapp.common.entity.BaseEntity;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
+import com.rentalapp.module.media.entity.ListingMedia;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,13 +13,17 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.CascadeType;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -90,4 +95,7 @@ public class Listing extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "amenity_id")
     )
     private Set<Amenity> amenities = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ListingMedia> media = new ArrayList<>();
 }

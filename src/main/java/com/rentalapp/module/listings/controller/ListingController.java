@@ -3,6 +3,7 @@ package com.rentalapp.module.listings.controller;
 import com.rentalapp.common.api.ApiResponse;
 import com.rentalapp.module.listings.dto.AmenityResponse;
 import com.rentalapp.module.listings.dto.ListingDetailResponse;
+import com.rentalapp.module.listings.dto.ListingSearchRequest;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
 import com.rentalapp.module.listings.dto.ListingUpsertRequest;
 import com.rentalapp.module.listings.service.ListingService;
@@ -14,8 +15,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -23,6 +24,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ListingController {
     private final ListingService listingService;
+
+    @GetMapping("/api/v1/listings")
+    public ResponseEntity<ApiResponse<List<ListingSummaryResponse>>> searchListings(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String area,
+            @RequestParam(required = false) java.math.BigDecimal minPrice,
+            @RequestParam(required = false) java.math.BigDecimal maxPrice,
+            @RequestParam(required = false) Integer bedrooms,
+            @RequestParam(required = false) Integer bathrooms,
+            @RequestParam(required = false) com.rentalapp.module.listings.entity.HouseType houseType,
+            @RequestParam(required = false) Boolean furnished,
+            @RequestParam(required = false) List<String> amenities
+    ) {
+        ListingSearchRequest request = new ListingSearchRequest();
+        request.setCity(city);
+        request.setArea(area);
+        request.setMinPrice(minPrice);
+        request.setMaxPrice(maxPrice);
+        request.setBedrooms(bedrooms);
+        request.setBathrooms(bathrooms);
+        request.setHouseType(houseType);
+        request.setFurnished(furnished);
+        request.setAmenities(amenities);
+
+        return ResponseEntity.ok(ApiResponse.ok(listingService.searchPublicListings(request)));
+    }
 
     @PostMapping("/api/v1/listings")
     public ResponseEntity<ApiResponse<ListingSummaryResponse>> createListing(@Valid @RequestBody ListingUpsertRequest request) {

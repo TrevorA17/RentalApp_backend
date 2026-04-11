@@ -8,29 +8,39 @@ import com.rentalapp.module.auth.entity.User;
 import com.rentalapp.module.auth.repository.UserRepository;
 import com.rentalapp.module.listings.dto.AmenityResponse;
 import com.rentalapp.module.listings.dto.ListingDetailResponse;
+import com.rentalapp.module.listings.dto.ListingSearchRequest;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
 import com.rentalapp.module.listings.dto.ListingUpsertRequest;
 import com.rentalapp.module.listings.entity.Amenity;
 import com.rentalapp.module.listings.entity.ApprovalStatus;
 import com.rentalapp.module.listings.entity.Listing;
 import com.rentalapp.module.listings.entity.ListingStatus;
+import com.rentalapp.module.media.dto.ListingMediaRequest;
+import com.rentalapp.module.media.dto.ListingMediaResponse;
+import com.rentalapp.module.media.entity.ListingMedia;
+import com.rentalapp.module.media.repository.ListingMediaRepository;
 import com.rentalapp.module.listings.repository.AmenityRepository;
 import com.rentalapp.module.listings.repository.ListingRepository;
 import com.rentalapp.module.listings.service.ListingService;
 import com.rentalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class ListingServiceImpl implements ListingService {
     private final ListingRepository listingRepository;
     private final AmenityRepository amenityRepository;
+    private final ListingMediaRepository listingMediaRepository;
     private final UserRepository userRepository;
 
     @Override
@@ -41,7 +51,8 @@ public class ListingServiceImpl implements ListingService {
         listing.setOwnerUser(owner);
         listing.setOwnerType(owner.getRole());
         applyRequest(listing, request);
-        return toSummary(listingRepository.save(listing));
+        Listing savedListing = listingRepository.save(listing);
+        return toSummary(savedListing, savedListing.getMedia());
     }
 
     @Override
@@ -52,7 +63,8 @@ public class ListingServiceImpl implements ListingService {
         listing.setListingStatus(listing.getListingStatus() == ListingStatus.ARCHIVED ? ListingStatus.ARCHIVED : ListingStatus.DRAFT);
         listing.setApprovalStatus(ApprovalStatus.PENDING);
         listing.setPublishedAt(null);
-        return toSummary(listingRepository.save(listing));
+        Listing savedListing = listingRepository.save(listing);
+        return toSummary(savedListing, savedListing.getMedia());
     }
 
     @Override
@@ -63,7 +75,8 @@ public class ListingServiceImpl implements ListingService {
         listing.setListingStatus(ListingStatus.PUBLISHED);
         listing.setApprovalStatus(ApprovalStatus.APPROVED);
         listing.setPublishedAt(Instant.now());
-        return toSummary(listingRepository.save(listing));
+        Listing savedListing = listingRepository.save(listing);
+        return toSummary(savedListing, savedListing.getMedia());
     }
 
     @Override
@@ -71,9 +84,35 @@ public class ListingServiceImpl implements ListingService {
     public List<ListingSummaryResponse> getMyListings() {
         String userId = SecurityUtils.requireCurrentUserId();
         requirePoster();
-        return listingRepository.findByOwnerUserIdOrderByUpdatedAtDesc(userId)
+        List<Listing> listings = listingRepository.findDistinctByOwnerUserIdOrderByUpdatedAtDesc(userId);
+        Map<String, List<ListingMedia>> mediaByListingId = getMediaByListingId(listings);
+        return listings
                 .stream()
-                .map(this::toSummary)
+                .map(listing -> toSummary(listing, mediaByListingId.getOrDefault(listing.getId(), List.of())))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ListingSummaryResponse> searchPublicListings(ListingSearchRequest request) {
+        Specification<Listing> spec = Specification
+                .where(hasListingStatus(ListingStatus.PUBLISHED))
+                .and(hasApprovalStatus(ApprovalStatus.APPROVED))
+                .and(hasCity(request.getCity()))
+                .and(hasArea(request.getArea()))
+                .and(hasMinPrice(request.getMinPrice()))
+                .and(hasMaxPrice(request.getMaxPrice()))
+                .and(hasBedrooms(request.getBedrooms()))
+                .and(hasBathrooms(request.getBathrooms()))
+                .and(hasHouseType(request.getHouseType()))
+                .and(hasFurnished(request.getFurnished()))
+                .and(hasAmenities(request.getAmenities()));
+
+        List<Listing> listings = listingRepository.findAll(spec);
+        Map<String, List<ListingMedia>> mediaByListingId = getMediaByListingId(listings);
+        return listings
+                .stream()
+                .map(listing -> toSummary(listing, mediaByListingId.getOrDefault(listing.getId(), List.of())))
                 .toList();
     }
 
@@ -91,7 +130,8 @@ public class ListingServiceImpl implements ListingService {
             throw new ForbiddenException("You do not have access to this listing.");
         }
 
-        return toDetail(listing);
+        List<ListingMedia> media = listingMediaRepository.findByListing_IdOrderByDisplayOrderAsc(listingId);
+        return toDetail(listing, media);
     }
 
     @Override
@@ -146,6 +186,20 @@ public class ListingServiceImpl implements ListingService {
         listing.setFurnished(request.getFurnished());
         listing.setAvailabilityStatus(request.getAvailabilityStatus());
         listing.setAmenities(new LinkedHashSet<>(amenities));
+        listing.getMedia().clear();
+        List<ListingMediaRequest> mediaRequests = request.getMedia() == null ? List.of() : request.getMedia();
+        for (int index = 0; index < mediaRequests.size(); index++) {
+            ListingMediaRequest mediaRequest = mediaRequests.get(index);
+            ListingMedia media = new ListingMedia();
+            media.setListing(listing);
+            media.setMediaType(mediaRequest.getMediaType());
+            media.setMediaUrl(mediaRequest.getMediaUrl().trim());
+            media.setCaption(mediaRequest.getCaption() == null || mediaRequest.getCaption().isBlank()
+                    ? null
+                    : mediaRequest.getCaption().trim());
+            media.setDisplayOrder(index);
+            listing.getMedia().add(media);
+        }
     }
 
     private void validatePublishable(Listing listing) {
@@ -154,7 +208,66 @@ public class ListingServiceImpl implements ListingService {
         }
     }
 
-    private ListingSummaryResponse toSummary(Listing listing) {
+    private Specification<Listing> hasListingStatus(ListingStatus status) {
+        return (root, query, cb) -> cb.equal(root.get("listingStatus"), status);
+    }
+
+    private Specification<Listing> hasApprovalStatus(ApprovalStatus status) {
+        return (root, query, cb) -> cb.equal(root.get("approvalStatus"), status);
+    }
+
+    private Specification<Listing> hasCity(String city) {
+        return (root, query, cb) ->
+                city == null || city.isBlank() ? cb.conjunction() : cb.equal(cb.lower(root.get("city")), city.trim().toLowerCase());
+    }
+
+    private Specification<Listing> hasArea(String area) {
+        return (root, query, cb) ->
+                area == null || area.isBlank() ? cb.conjunction() : cb.equal(cb.lower(root.get("area")), area.trim().toLowerCase());
+    }
+
+    private Specification<Listing> hasMinPrice(java.math.BigDecimal minPrice) {
+        return (root, query, cb) ->
+                minPrice == null ? cb.conjunction() : cb.greaterThanOrEqualTo(root.get("rentAmount"), minPrice);
+    }
+
+    private Specification<Listing> hasMaxPrice(java.math.BigDecimal maxPrice) {
+        return (root, query, cb) ->
+                maxPrice == null ? cb.conjunction() : cb.lessThanOrEqualTo(root.get("rentAmount"), maxPrice);
+    }
+
+    private Specification<Listing> hasBedrooms(Integer bedrooms) {
+        return (root, query, cb) ->
+                bedrooms == null ? cb.conjunction() : cb.equal(root.get("bedrooms"), bedrooms);
+    }
+
+    private Specification<Listing> hasBathrooms(Integer bathrooms) {
+        return (root, query, cb) ->
+                bathrooms == null ? cb.conjunction() : cb.equal(root.get("bathrooms"), bathrooms);
+    }
+
+    private Specification<Listing> hasHouseType(com.rentalapp.module.listings.entity.HouseType houseType) {
+        return (root, query, cb) ->
+                houseType == null ? cb.conjunction() : cb.equal(root.get("houseType"), houseType);
+    }
+
+    private Specification<Listing> hasFurnished(Boolean furnished) {
+        return (root, query, cb) ->
+                furnished == null ? cb.conjunction() : cb.equal(root.get("furnished"), furnished);
+    }
+
+    private Specification<Listing> hasAmenities(List<String> amenityIds) {
+        return (root, query, cb) -> {
+            if (amenityIds == null || amenityIds.isEmpty()) {
+                return cb.conjunction();
+            }
+
+            query.distinct(true);
+            return root.join("amenities").get("id").in(amenityIds);
+        };
+    }
+
+    private ListingSummaryResponse toSummary(Listing listing, List<ListingMedia> media) {
         return ListingSummaryResponse.builder()
                 .id(listing.getId())
                 .title(listing.getTitle())
@@ -172,10 +285,12 @@ public class ListingServiceImpl implements ListingService {
                 .approvalStatus(listing.getApprovalStatus())
                 .ownerType(listing.getOwnerType())
                 .amenities(listing.getAmenities().stream().map(this::toAmenity).toList())
+                .thumbnailUrl(resolveThumbnailUrl(media))
+                .media(toMediaResponses(media))
                 .build();
     }
 
-    private ListingDetailResponse toDetail(Listing listing) {
+    private ListingDetailResponse toDetail(Listing listing, List<ListingMedia> media) {
         return ListingDetailResponse.builder()
                 .id(listing.getId())
                 .title(listing.getTitle())
@@ -194,12 +309,56 @@ public class ListingServiceImpl implements ListingService {
                 .approvalStatus(listing.getApprovalStatus())
                 .ownerType(listing.getOwnerType())
                 .amenities(listing.getAmenities().stream().map(this::toAmenity).toList())
+                .thumbnailUrl(resolveThumbnailUrl(media))
+                .media(toMediaResponses(media))
                 .poster(ListingDetailResponse.PosterSummary.builder()
                         .userId(listing.getOwnerUser().getId())
                         .fullName(listing.getOwnerUser().getFullName())
                         .email(listing.getOwnerUser().getEmail())
                         .role(listing.getOwnerUser().getRole())
                         .build())
+                .build();
+    }
+
+    private Map<String, List<ListingMedia>> getMediaByListingId(List<Listing> listings) {
+        if (listings.isEmpty()) {
+            return Map.of();
+        }
+
+        List<String> listingIds = listings.stream().map(Listing::getId).toList();
+        Map<String, List<ListingMedia>> mediaByListingId = new HashMap<>();
+
+        for (ListingMedia media : listingMediaRepository.findByListing_IdInOrderByListing_IdAscDisplayOrderAsc(listingIds)) {
+            mediaByListingId.computeIfAbsent(media.getListing().getId(), ignored -> new java.util.ArrayList<>()).add(media);
+        }
+
+        return mediaByListingId;
+    }
+
+    private List<ListingMediaResponse> toMediaResponses(List<ListingMedia> media) {
+        return media
+                .stream()
+                .sorted(Comparator.comparing(ListingMedia::getDisplayOrder))
+                .map(this::toMedia)
+                .toList();
+    }
+
+    private String resolveThumbnailUrl(List<ListingMedia> media) {
+        return media
+                .stream()
+                .sorted(Comparator.comparing(ListingMedia::getDisplayOrder))
+                .map(ListingMedia::getMediaUrl)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private ListingMediaResponse toMedia(ListingMedia media) {
+        return ListingMediaResponse.builder()
+                .id(media.getId())
+                .mediaType(media.getMediaType())
+                .mediaUrl(media.getMediaUrl())
+                .caption(media.getCaption())
+                .displayOrder(media.getDisplayOrder())
                 .build();
     }
 
