@@ -1,5 +1,6 @@
 package com.rentalapp.module.listings.service.impl;
 
+import com.rentalapp.common.api.PaginatedResponse;
 import com.rentalapp.exception.ForbiddenException;
 import com.rentalapp.exception.ResourceNotFoundException;
 import com.rentalapp.exception.ValidationException;
@@ -10,6 +11,7 @@ import com.rentalapp.module.listings.dto.AmenityResponse;
 import com.rentalapp.module.listings.dto.ListingDetailResponse;
 import com.rentalapp.module.listings.dto.ListingSearchRequest;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
+import com.rentalapp.module.listings.dto.ListingSortOption;
 import com.rentalapp.module.listings.dto.ListingUpsertRequest;
 import com.rentalapp.module.listings.entity.Amenity;
 import com.rentalapp.module.listings.entity.ApprovalStatus;
@@ -24,6 +26,9 @@ import com.rentalapp.module.listings.repository.ListingRepository;
 import com.rentalapp.module.listings.service.ListingService;
 import com.rentalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,7 +99,7 @@ public class ListingServiceImpl implements ListingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ListingSummaryResponse> searchPublicListings(ListingSearchRequest request) {
+    public PaginatedResponse<ListingSummaryResponse> searchPublicListings(ListingSearchRequest request) {
         Specification<Listing> spec = Specification
                 .where(hasListingStatus(ListingStatus.PUBLISHED))
                 .and(hasApprovalStatus(ApprovalStatus.APPROVED))
@@ -108,12 +113,25 @@ public class ListingServiceImpl implements ListingService {
                 .and(hasFurnished(request.getFurnished()))
                 .and(hasAmenities(request.getAmenities()));
 
-        List<Listing> listings = listingRepository.findAll(spec);
+        Pageable pageable = buildSearchPageable(request);
+        Page<Listing> listingsPage = listingRepository.findAll(spec, pageable);
+        List<Listing> listings = listingsPage.getContent();
         Map<String, List<ListingMedia>> mediaByListingId = getMediaByListingId(listings);
-        return listings
+        List<ListingSummaryResponse> items = listings
                 .stream()
                 .map(listing -> toSummary(listing, mediaByListingId.getOrDefault(listing.getId(), List.of())))
                 .toList();
+
+        return PaginatedResponse.<ListingSummaryResponse>builder()
+                .items(items)
+                .page(listingsPage.getNumber())
+                .size(listingsPage.getSize())
+                .totalElements(listingsPage.getTotalElements())
+                .totalPages(listingsPage.getTotalPages())
+                .hasNext(listingsPage.hasNext())
+                .hasPrevious(listingsPage.hasPrevious())
+                .sort((request.getSort() == null ? ListingSortOption.PUBLISHED_AT_DESC : request.getSort()).name())
+                .build();
     }
 
     @Override
@@ -265,6 +283,15 @@ public class ListingServiceImpl implements ListingService {
             query.distinct(true);
             return root.join("amenities").get("id").in(amenityIds);
         };
+    }
+
+    private Pageable buildSearchPageable(ListingSearchRequest request) {
+        int requestedPage = request.getPage() == null ? 0 : request.getPage();
+        int requestedSize = request.getSize() == null ? 12 : request.getSize();
+        int normalizedPage = Math.max(0, requestedPage);
+        int normalizedSize = Math.min(Math.max(1, requestedSize), 24);
+        ListingSortOption sort = request.getSort() == null ? ListingSortOption.PUBLISHED_AT_DESC : request.getSort();
+        return PageRequest.of(normalizedPage, normalizedSize, sort.toSort());
     }
 
     private ListingSummaryResponse toSummary(Listing listing, List<ListingMedia> media) {

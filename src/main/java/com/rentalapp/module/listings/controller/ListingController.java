@@ -1,10 +1,12 @@
 package com.rentalapp.module.listings.controller;
 
 import com.rentalapp.common.api.ApiResponse;
+import com.rentalapp.common.api.PaginatedResponse;
 import com.rentalapp.module.listings.dto.AmenityResponse;
 import com.rentalapp.module.listings.dto.ListingDetailResponse;
 import com.rentalapp.module.listings.dto.ListingSearchRequest;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
+import com.rentalapp.module.listings.dto.ListingSortOption;
 import com.rentalapp.module.listings.dto.ListingUpsertRequest;
 import com.rentalapp.module.listings.service.ListingService;
 import jakarta.validation.Valid;
@@ -26,7 +28,7 @@ public class ListingController {
     private final ListingService listingService;
 
     @GetMapping("/api/v1/listings")
-    public ResponseEntity<ApiResponse<List<ListingSummaryResponse>>> searchListings(
+    public ResponseEntity<ApiResponse<PaginatedResponse<ListingSummaryResponse>>> searchListings(
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String area,
             @RequestParam(required = false) java.math.BigDecimal minPrice,
@@ -35,7 +37,10 @@ public class ListingController {
             @RequestParam(required = false) Integer bathrooms,
             @RequestParam(required = false) com.rentalapp.module.listings.entity.HouseType houseType,
             @RequestParam(required = false) Boolean furnished,
-            @RequestParam(required = false) List<String> amenities
+            @RequestParam(required = false) List<String> amenities,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "12") Integer size,
+            @RequestParam(defaultValue = "PUBLISHED_AT_DESC") ListingSortOption sort
     ) {
         ListingSearchRequest request = new ListingSearchRequest();
         request.setCity(city);
@@ -47,6 +52,9 @@ public class ListingController {
         request.setHouseType(houseType);
         request.setFurnished(furnished);
         request.setAmenities(amenities);
+        request.setPage(page);
+        request.setSize(size);
+        request.setSort(sort);
 
         return ResponseEntity.ok(ApiResponse.ok(listingService.searchPublicListings(request)));
     }

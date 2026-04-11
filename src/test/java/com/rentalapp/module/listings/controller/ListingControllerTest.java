@@ -1,5 +1,6 @@
 package com.rentalapp.module.listings.controller;
 
+import com.rentalapp.common.api.PaginatedResponse;
 import com.rentalapp.exception.GlobalExceptionHandler;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
@@ -59,14 +60,31 @@ class ListingControllerTest {
                 .media(List.of())
                 .build();
 
-        when(listingService.searchPublicListings(any())).thenReturn(List.of(listing));
+        PaginatedResponse<ListingSummaryResponse> response = PaginatedResponse.<ListingSummaryResponse>builder()
+                .items(List.of(listing))
+                .page(0)
+                .size(12)
+                .totalElements(1)
+                .totalPages(1)
+                .hasNext(false)
+                .hasPrevious(false)
+                .sort("PUBLISHED_AT_DESC")
+                .build();
+
+        when(listingService.searchPublicListings(any())).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/listings")
                         .param("city", "Nairobi")
-                        .param("bedrooms", "1"))
+                        .param("bedrooms", "1")
+                        .param("page", "0")
+                        .param("size", "12")
+                        .param("sort", "PUBLISHED_AT_DESC"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data[0].title").value("Sunny Kilimani Apartment"))
-                .andExpect(jsonPath("$.data[0].listingStatus").value("PUBLISHED"));
+                .andExpect(jsonPath("$.data.items[0].title").value("Sunny Kilimani Apartment"))
+                .andExpect(jsonPath("$.data.items[0].listingStatus").value("PUBLISHED"))
+                .andExpect(jsonPath("$.data.page").value(0))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.sort").value("PUBLISHED_AT_DESC"));
     }
 }

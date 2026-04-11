@@ -1,5 +1,6 @@
 package com.rentalapp.module.listings.service;
 
+import com.rentalapp.common.api.PaginatedResponse;
 import com.rentalapp.module.listings.dto.AmenityResponse;
 import com.rentalapp.module.listings.dto.ListingDetailResponse;
 import com.rentalapp.module.listings.dto.ListingSearchRequest;
@@ -14,6 +15,6 @@ public interface ListingService {
     ListingSummaryResponse publishListing(String listingId);
     List<ListingSummaryResponse> getMyListings();
     ListingDetailResponse getListingById(String listingId);
-    List<ListingSummaryResponse> searchPublicListings(ListingSearchRequest request);
+    PaginatedResponse<ListingSummaryResponse> searchPublicListings(ListingSearchRequest request);
     List<AmenityResponse> getAmenities();
 }

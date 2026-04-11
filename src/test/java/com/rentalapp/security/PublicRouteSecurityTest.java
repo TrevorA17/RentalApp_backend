@@ -2,11 +2,13 @@ package com.rentalapp.security;
 
 import com.rentalapp.config.RestAccessDeniedHandler;
 import com.rentalapp.config.RestAuthenticationEntryPoint;
+import com.rentalapp.common.api.PaginatedResponse;
 import com.rentalapp.config.SecurityConfig;
 import com.rentalapp.exception.GlobalExceptionHandler;
 import com.rentalapp.module.auth.controller.AuthController;
 import com.rentalapp.module.auth.service.AuthService;
 import com.rentalapp.module.listings.controller.ListingController;
+import com.rentalapp.module.listings.dto.ListingSummaryResponse;
 import com.rentalapp.module.listings.service.ListingService;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.junit.jupiter.api.Test;
@@ -15,8 +17,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -46,11 +46,21 @@ class PublicRouteSecurityTest {
 
     @Test
     void publicListingsEndpointIsAccessibleWithoutAuthentication() throws Exception {
-        when(listingService.searchPublicListings(any())).thenReturn(List.of());
+        when(listingService.searchPublicListings(any())).thenReturn(PaginatedResponse.<ListingSummaryResponse>builder()
+                .items(java.util.List.of())
+                .page(0)
+                .size(12)
+                .totalElements(0)
+                .totalPages(0)
+                .hasNext(false)
+                .hasPrevious(false)
+                .sort("PUBLISHED_AT_DESC")
+                .build());
 
         mockMvc.perform(get("/api/v1/listings"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.items").isArray());
     }
 
     @Test
