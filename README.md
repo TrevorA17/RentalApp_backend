@@ -10,7 +10,7 @@ This repo is no longer scaffold-only. The backend currently implements:
 - profile management
 - rental listing creation, editing, publishing, and public browse
 - amenity support
-- URL-based listing media embedded in listing create/update payloads
+- uploaded listing media stored on the backend filesystem and attached through listing create/update payloads
 - saved listings
 - renter inquiries
 - agent recommendations/testimonials on public agent profiles
@@ -51,6 +51,7 @@ This repo is no longer scaffold-only. The backend currently implements:
 - `GET /api/v1/listings`
 - `GET /api/v1/listings/{listingId}`
 - `POST /api/v1/listings`
+- `POST /api/v1/listings/media/upload`
 - `PUT /api/v1/listings/{listingId}`
 - `POST /api/v1/listings/{listingId}/publish`
 - `GET /api/v1/my/listings`
@@ -128,6 +129,8 @@ Required backend env vars outside the local profile defaults:
 - `DB_USERNAME`
 - `DB_PASSWORD`
 - `APP_CORS_ALLOWED_ORIGINS`
+- `APP_MEDIA_STORAGE_PATH`
+- `APP_MEDIA_PUBLIC_BASE_URL`
 - `JWT_SECRET`
 
 Key local defaults:
@@ -152,6 +155,8 @@ This now starts the currently implemented MVP stack:
 - `postgres` on `localhost:5433`
 - `backend` on `localhost:8080`
 - `frontend` on `localhost:3000`
+
+Uploaded listing media is stored in the compose-managed `listing-media` volume and served publicly from `http://localhost:8080/media/...`.
 
 This compose file does not include Qdrant or Ollama because the current app does not require them.
 
@@ -193,11 +198,11 @@ Current migrations:
 
 ## Known limits
 
-- media is URL-based, not file-upload based
 - Qdrant and Ollama are not part of the working runtime stack yet
 - AI infra beyond heuristic enhancement is not wired yet
 - Docker is now suitable for local parity and simple container deployment, but it is not a full production platform setup yet
-- admin recommendation moderation does not yet have a frontend page
+- moderation history UI is intentionally lightweight and recent-actions only
+- media uploads are currently image-first and stored on the backend filesystem, not object storage
 
 ## Source-of-truth docs
 

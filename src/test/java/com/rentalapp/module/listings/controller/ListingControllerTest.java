@@ -9,6 +9,7 @@ import com.rentalapp.module.listings.entity.AvailabilityStatus;
 import com.rentalapp.module.listings.entity.HouseType;
 import com.rentalapp.module.listings.entity.ListingStatus;
 import com.rentalapp.module.listings.service.ListingService;
+import com.rentalapp.module.media.service.ListingMediaUploadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,11 +32,14 @@ class ListingControllerTest {
     @Mock
     private ListingService listingService;
 
+    @Mock
+    private ListingMediaUploadService listingMediaUploadService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new ListingController(listingService))
+        mockMvc = MockMvcBuilders.standaloneSetup(new ListingController(listingService, listingMediaUploadService))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }

@@ -34,6 +34,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -208,6 +210,7 @@ public class ListingServiceImpl implements ListingService {
         List<ListingMediaRequest> mediaRequests = request.getMedia() == null ? List.of() : request.getMedia();
         for (int index = 0; index < mediaRequests.size(); index++) {
             ListingMediaRequest mediaRequest = mediaRequests.get(index);
+            validateMediaRequest(mediaRequest);
             ListingMedia media = new ListingMedia();
             media.setListing(listing);
             media.setMediaType(mediaRequest.getMediaType());
@@ -217,6 +220,27 @@ public class ListingServiceImpl implements ListingService {
                     : mediaRequest.getCaption().trim());
             media.setDisplayOrder(index);
             listing.getMedia().add(media);
+        }
+    }
+
+    private void validateMediaRequest(ListingMediaRequest mediaRequest) {
+        if (mediaRequest.getMediaType() == null) {
+            throw new ValidationException("Media type is required.");
+        }
+
+        String mediaUrl = mediaRequest.getMediaUrl() == null ? "" : mediaRequest.getMediaUrl().trim();
+        if (mediaUrl.isBlank()) {
+            throw new ValidationException("Media URL is required.");
+        }
+
+        try {
+            URI uri = new URI(mediaUrl);
+            String scheme = uri.getScheme();
+            if (scheme == null || (!scheme.equalsIgnoreCase("http") && !scheme.equalsIgnoreCase("https"))) {
+                throw new ValidationException("Media URL must use http or https.");
+            }
+        } catch (URISyntaxException exception) {
+            throw new ValidationException("Media URL is invalid.");
         }
     }
 

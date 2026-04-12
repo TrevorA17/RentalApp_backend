@@ -9,8 +9,11 @@ import com.rentalapp.module.listings.dto.ListingSummaryResponse;
 import com.rentalapp.module.listings.dto.ListingSortOption;
 import com.rentalapp.module.listings.dto.ListingUpsertRequest;
 import com.rentalapp.module.listings.service.ListingService;
+import com.rentalapp.module.media.dto.MediaUploadResponse;
+import com.rentalapp.module.media.service.ListingMediaUploadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,6 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ListingController {
     private final ListingService listingService;
+    private final ListingMediaUploadService listingMediaUploadService;
 
     @GetMapping("/api/v1/listings")
     public ResponseEntity<ApiResponse<PaginatedResponse<ListingSummaryResponse>>> searchListings(
@@ -62,6 +67,11 @@ public class ListingController {
     @PostMapping("/api/v1/listings")
     public ResponseEntity<ApiResponse<ListingSummaryResponse>> createListing(@Valid @RequestBody ListingUpsertRequest request) {
         return ResponseEntity.ok(ApiResponse.ok("Listing created successfully", listingService.createListing(request)));
+    }
+
+    @PostMapping(value = "/api/v1/listings/media/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<MediaUploadResponse>> uploadListingMedia(@RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(ApiResponse.ok("Listing media uploaded successfully", listingMediaUploadService.uploadListingImage(file)));
     }
 
     @PutMapping("/api/v1/listings/{listingId}")

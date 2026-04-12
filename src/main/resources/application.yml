@@ -20,6 +20,10 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 
 server:
   port: ${SERVER_PORT:8080}
@@ -31,3 +35,11 @@ app:
     secret: ${JWT_SECRET}
     access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:3600000}
     refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION_MS:604800000}
+  media:
+    storage-path: ${APP_MEDIA_STORAGE_PATH}
+    public-base-url: ${APP_MEDIA_PUBLIC_BASE_URL}
+    max-file-size-bytes: ${APP_MEDIA_MAX_FILE_SIZE_BYTES:5242880}
+    allowed-content-types:
+      - image/jpeg
+      - image/png
+      - image/webp

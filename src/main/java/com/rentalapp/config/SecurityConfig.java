@@ -23,7 +23,7 @@ import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties({JwtProperties.class, AppCorsProperties.class})
+@EnableConfigurationProperties({JwtProperties.class, AppCorsProperties.class, AppMediaProperties.class})
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -51,6 +51,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/listings").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/listings/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/amenities").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/saved-listings/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .anyRequest().authenticated()

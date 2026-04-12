@@ -10,6 +10,7 @@ import com.rentalapp.module.auth.service.AuthService;
 import com.rentalapp.module.listings.controller.ListingController;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
 import com.rentalapp.module.listings.service.ListingService;
+import com.rentalapp.module.media.service.ListingMediaUploadService;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,9 @@ class PublicRouteSecurityTest {
 
     @MockBean
     private ListingService listingService;
+
+    @MockBean
+    private ListingMediaUploadService listingMediaUploadService;
 
     @Test
     void publicListingsEndpointIsAccessibleWithoutAuthentication() throws Exception {
