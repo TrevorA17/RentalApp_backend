@@ -5,6 +5,7 @@ import com.rentalapp.config.RestAuthenticationEntryPoint;
 import com.rentalapp.config.SecurityConfig;
 import com.rentalapp.exception.GlobalExceptionHandler;
 import com.rentalapp.module.admin.controller.AdminModerationController;
+import com.rentalapp.module.admin.repository.ModerationActionRepository;
 import com.rentalapp.module.admin.service.ModerationAuditService;
 import com.rentalapp.module.admin.service.impl.AdminModerationServiceImpl;
 import com.rentalapp.module.auth.entity.Role;
@@ -49,6 +50,9 @@ class AdminRouteSecurityTest {
 
     @MockBean
     private ModerationAuditService moderationAuditService;
+
+    @MockBean
+    private ModerationActionRepository moderationActionRepository;
 
     @Test
     void adminUsersEndpointRejectsAnonymousRequests() throws Exception {

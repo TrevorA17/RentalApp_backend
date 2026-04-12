@@ -2,6 +2,7 @@ package com.rentalapp.module.admin.service.impl;
 
 import com.rentalapp.exception.ResourceNotFoundException;
 import com.rentalapp.module.admin.dto.AdminListingResponse;
+import com.rentalapp.module.admin.dto.AdminModerationActionResponse;
 import com.rentalapp.module.admin.dto.AdminUserResponse;
 import com.rentalapp.module.admin.dto.UpdateListingApprovalRequest;
 import com.rentalapp.module.admin.dto.UpdateUserStatusRequest;
@@ -9,6 +10,7 @@ import com.rentalapp.module.admin.entity.ModerationActionType;
 import com.rentalapp.module.admin.entity.ModerationTargetType;
 import com.rentalapp.module.admin.service.AdminModerationService;
 import com.rentalapp.module.admin.service.ModerationAuditService;
+import com.rentalapp.module.admin.repository.ModerationActionRepository;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
 import com.rentalapp.module.auth.repository.UserRepository;
@@ -29,6 +31,7 @@ import java.util.List;
 public class AdminModerationServiceImpl implements AdminModerationService {
     private final ListingRepository listingRepository;
     private final UserRepository userRepository;
+    private final ModerationActionRepository moderationActionRepository;
     private final ModerationAuditService moderationAuditService;
 
     @Override
@@ -89,6 +92,32 @@ public class AdminModerationServiceImpl implements AdminModerationService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         user.setStatus(request.getStatus());
         return toAdminUser(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdminModerationActionResponse> getRecentModerationActions(int limit) {
+        SecurityUtils.requireRole(Role.ADMIN);
+        int normalizedLimit = Math.max(1, Math.min(limit, 50));
+        return moderationActionRepository.findRecentWithActor()
+                .stream()
+                .limit(normalizedLimit)
+                .map(action -> AdminModerationActionResponse.builder()
+                        .id(action.getId())
+                        .targetType(action.getTargetType())
+                        .targetId(action.getTargetId())
+                        .actionType(action.getActionType())
+                        .previousStatus(action.getPreviousStatus())
+                        .newStatus(action.getNewStatus())
+                        .reasonOrNote(action.getReasonOrNote())
+                        .createdAt(action.getCreatedAt())
+                        .actor(AdminModerationActionResponse.ActorSummary.builder()
+                                .userId(action.getActorUser().getId())
+                                .fullName(action.getActorUser().getFullName())
+                                .email(action.getActorUser().getEmail())
+                                .build())
+                        .build())
+                .toList();
     }
 
     private AdminListingResponse toAdminListing(Listing listing) {

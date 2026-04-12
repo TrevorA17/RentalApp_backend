@@ -1,6 +1,7 @@
 package com.rentalapp.module.recommendations.controller;
 
 import com.rentalapp.common.api.ApiResponse;
+import com.rentalapp.module.recommendations.dto.AdminAgentRecommendationResponse;
 import com.rentalapp.module.recommendations.dto.AgentRecommendationResponse;
 import com.rentalapp.module.recommendations.dto.CreateAgentRecommendationRequest;
 import com.rentalapp.module.recommendations.dto.UpdateAgentRecommendationApprovalRequest;
@@ -39,12 +40,12 @@ public class AgentRecommendationController {
     }
 
     @GetMapping("/api/v1/admin/recommendations")
-    public ResponseEntity<ApiResponse<List<AgentRecommendationResponse>>> getAdminRecommendations() {
+    public ResponseEntity<ApiResponse<List<AdminAgentRecommendationResponse>>> getAdminRecommendations() {
         return ResponseEntity.ok(ApiResponse.ok(agentRecommendationService.getAdminRecommendations()));
     }
 
     @PatchMapping("/api/v1/admin/recommendations/{recommendationId}/approval")
-    public ResponseEntity<ApiResponse<AgentRecommendationResponse>> updateApprovalStatus(
+    public ResponseEntity<ApiResponse<AdminAgentRecommendationResponse>> updateApprovalStatus(
             @PathVariable String recommendationId,
             @Valid @RequestBody UpdateAgentRecommendationApprovalRequest request
     ) {

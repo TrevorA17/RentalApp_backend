@@ -11,6 +11,7 @@ import com.rentalapp.module.auth.entity.User;
 import com.rentalapp.module.auth.repository.UserRepository;
 import com.rentalapp.module.listings.entity.ApprovalStatus;
 import com.rentalapp.module.recommendations.dto.AgentRecommendationResponse;
+import com.rentalapp.module.recommendations.dto.AdminAgentRecommendationResponse;
 import com.rentalapp.module.recommendations.dto.CreateAgentRecommendationRequest;
 import com.rentalapp.module.recommendations.dto.UpdateAgentRecommendationApprovalRequest;
 import com.rentalapp.module.recommendations.entity.AgentRecommendation;
@@ -83,17 +84,17 @@ public class AgentRecommendationServiceImpl implements AgentRecommendationServic
 
     @Override
     @Transactional(readOnly = true)
-    public List<AgentRecommendationResponse> getAdminRecommendations() {
+    public List<AdminAgentRecommendationResponse> getAdminRecommendations() {
         SecurityUtils.requireRole(Role.ADMIN);
         return agentRecommendationRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
-                .map(this::toResponse)
+                .map(this::toAdminResponse)
                 .toList();
     }
 
     @Override
     @Transactional
-    public AgentRecommendationResponse updateApprovalStatus(String recommendationId, UpdateAgentRecommendationApprovalRequest request) {
+    public AdminAgentRecommendationResponse updateApprovalStatus(String recommendationId, UpdateAgentRecommendationApprovalRequest request) {
         SecurityUtils.requireRole(Role.ADMIN);
         AgentRecommendation recommendation = agentRecommendationRepository.findById(recommendationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Recommendation not found."));
@@ -108,7 +109,7 @@ public class AgentRecommendationServiceImpl implements AgentRecommendationServic
                 savedRecommendation.getApprovalStatus().name(),
                 null
         );
-        return toResponse(savedRecommendation);
+        return toAdminResponse(savedRecommendation);
     }
 
     private String normalizeComment(String value) {
@@ -130,6 +131,27 @@ public class AgentRecommendationServiceImpl implements AgentRecommendationServic
                 .author(AgentRecommendationResponse.AuthorSummary.builder()
                         .userId(recommendation.getAuthorUser().getId())
                         .fullName(recommendation.getAuthorUser().getFullName())
+                        .role(recommendation.getAuthorUser().getRole().name())
+                        .build())
+                .build();
+    }
+
+    private AdminAgentRecommendationResponse toAdminResponse(AgentRecommendation recommendation) {
+        return AdminAgentRecommendationResponse.builder()
+                .id(recommendation.getId())
+                .rating(recommendation.getRating())
+                .comment(recommendation.getComment())
+                .approvalStatus(recommendation.getApprovalStatus())
+                .createdAt(recommendation.getCreatedAt())
+                .agent(AdminAgentRecommendationResponse.AgentSummary.builder()
+                        .userId(recommendation.getAgentUser().getId())
+                        .fullName(recommendation.getAgentUser().getFullName())
+                        .email(recommendation.getAgentUser().getEmail())
+                        .build())
+                .author(AdminAgentRecommendationResponse.AuthorSummary.builder()
+                        .userId(recommendation.getAuthorUser().getId())
+                        .fullName(recommendation.getAuthorUser().getFullName())
+                        .email(recommendation.getAuthorUser().getEmail())
                         .role(recommendation.getAuthorUser().getRole().name())
                         .build())
                 .build();

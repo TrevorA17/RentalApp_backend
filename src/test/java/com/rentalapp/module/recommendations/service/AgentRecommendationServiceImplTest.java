@@ -46,11 +46,19 @@ class AgentRecommendationServiceImplTest {
         User author = new User();
         author.setId("author-1");
         author.setFullName("Author One");
+        author.setEmail("author@example.com");
         author.setRole(Role.RENTER);
+
+        User agent = new User();
+        agent.setId("agent-1");
+        agent.setFullName("Agent One");
+        agent.setEmail("agent@example.com");
+        agent.setRole(Role.AGENT);
 
         AgentRecommendation recommendation = new AgentRecommendation();
         recommendation.setId("recommendation-1");
         recommendation.setApprovalStatus(ApprovalStatus.PENDING);
+        recommendation.setAgentUser(agent);
         recommendation.setAuthorUser(author);
         recommendation.setComment("Very reliable");
         recommendation.setRating(5);
