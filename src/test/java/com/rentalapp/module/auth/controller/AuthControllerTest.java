@@ -6,6 +6,7 @@ import com.rentalapp.module.auth.dto.AuthResponse;
 import com.rentalapp.module.auth.dto.AuthUserResponse;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.service.AuthService;
+import com.rentalapp.module.auth.service.impl.AuthRateLimitService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,13 +27,16 @@ class AuthControllerTest {
     @Mock
     private AuthService authService;
 
+    @Mock
+    private AuthRateLimitService authRateLimitService;
+
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        mockMvc = MockMvcBuilders.standaloneSetup(new AuthController(authService))
+        mockMvc = MockMvcBuilders.standaloneSetup(new AuthController(authService, authRateLimitService))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
@@ -52,7 +56,7 @@ class AuthControllerTest {
                 .user(user)
                 .build();
 
-        when(authService.login(any())).thenReturn(response);
+        when(authService.login(any(), any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

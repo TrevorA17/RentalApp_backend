@@ -7,6 +7,7 @@ import com.rentalapp.config.SecurityConfig;
 import com.rentalapp.exception.GlobalExceptionHandler;
 import com.rentalapp.module.auth.controller.AuthController;
 import com.rentalapp.module.auth.service.AuthService;
+import com.rentalapp.module.auth.service.impl.AuthRateLimitService;
 import com.rentalapp.module.listings.controller.ListingController;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
 import com.rentalapp.module.listings.service.ListingService;
@@ -41,6 +42,9 @@ class PublicRouteSecurityTest {
 
     @MockBean
     private AuthService authService;
+
+    @MockBean
+    private AuthRateLimitService authRateLimitService;
 
     @MockBean
     private ListingService listingService;

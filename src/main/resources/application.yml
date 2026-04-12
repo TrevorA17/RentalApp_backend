@@ -35,6 +35,18 @@ app:
     secret: ${JWT_SECRET}
     access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:3600000}
     refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION_MS:604800000}
+  security:
+    rate-limit:
+      auth-requests-per-window: ${APP_SECURITY_AUTH_REQUESTS_PER_WINDOW:10}
+      sensitive-action-requests-per-window: ${APP_SECURITY_SENSITIVE_ACTIONS_PER_WINDOW:5}
+      window: ${APP_SECURITY_RATE_LIMIT_WINDOW:PT15M}
+    login-abuse-protection:
+      max-failures: ${APP_SECURITY_LOGIN_MAX_FAILURES:5}
+      lockout-duration: ${APP_SECURITY_LOGIN_LOCKOUT_DURATION:PT15M}
+    password-reset:
+      token-ttl: ${APP_SECURITY_PASSWORD_RESET_TOKEN_TTL:PT30M}
+      dev-expose-profiles:
+        - local
   media:
     storage-path: ${APP_MEDIA_STORAGE_PATH}
     public-base-url: ${APP_MEDIA_PUBLIC_BASE_URL}

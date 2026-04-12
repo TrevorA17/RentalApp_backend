@@ -1,10 +1,12 @@
 package com.rentalapp.module.reports.controller;
 
 import com.rentalapp.common.api.ApiResponse;
+import com.rentalapp.module.auth.service.impl.AuthRateLimitService;
 import com.rentalapp.module.reports.dto.CreateReportRequest;
 import com.rentalapp.module.reports.dto.ReportResponse;
 import com.rentalapp.module.reports.dto.UpdateReportStatusRequest;
 import com.rentalapp.module.reports.service.ReportService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +23,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReportController {
     private final ReportService reportService;
+    private final AuthRateLimitService authRateLimitService;
 
     @PostMapping("/api/v1/reports")
-    public ResponseEntity<ApiResponse<ReportResponse>> createReport(@Valid @RequestBody CreateReportRequest request) {
+    public ResponseEntity<ApiResponse<ReportResponse>> createReport(
+            @Valid @RequestBody CreateReportRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        authRateLimitService.enforceSensitiveActionWindow("reports:create", httpRequest);
         return ResponseEntity.ok(ApiResponse.ok("Report submitted successfully.", reportService.createReport(request)));
     }
 

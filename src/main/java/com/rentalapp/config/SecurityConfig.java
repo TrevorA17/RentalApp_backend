@@ -23,7 +23,7 @@ import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties({JwtProperties.class, AppCorsProperties.class, AppMediaProperties.class})
+@EnableConfigurationProperties({JwtProperties.class, AppCorsProperties.class, AppMediaProperties.class, AppSecurityProperties.class})
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -44,7 +44,14 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
+                        .requestMatchers(
+                                "/api/v1/auth/register",
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/refresh",
+                                "/api/v1/auth/logout",
+                                "/api/v1/auth/password-reset/request",
+                                "/api/v1/auth/password-reset/confirm"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/profiles/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/profiles/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/agents/*/recommendations").permitAll()

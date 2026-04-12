@@ -5,6 +5,8 @@ import com.rentalapp.module.inquiries.dto.CreateInquiryRequest;
 import com.rentalapp.module.inquiries.dto.InquiryResponse;
 import com.rentalapp.module.inquiries.dto.UpdateInquiryStatusRequest;
 import com.rentalapp.module.inquiries.service.InquiryService;
+import com.rentalapp.module.auth.service.impl.AuthRateLimitService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +23,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InquiryController {
     private final InquiryService inquiryService;
+    private final AuthRateLimitService authRateLimitService;
 
     @PostMapping("/api/v1/listings/{listingId}/inquiries")
     public ResponseEntity<ApiResponse<InquiryResponse>> createInquiry(
             @PathVariable String listingId,
-            @Valid @RequestBody CreateInquiryRequest request
+            @Valid @RequestBody CreateInquiryRequest request,
+            HttpServletRequest httpRequest
     ) {
+        authRateLimitService.enforceSensitiveActionWindow("inquiries:create", httpRequest);
         return ResponseEntity.ok(ApiResponse.ok("Inquiry sent successfully.", inquiryService.createInquiry(listingId, request)));
     }
 
