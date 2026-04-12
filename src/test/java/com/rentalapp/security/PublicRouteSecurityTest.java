@@ -5,6 +5,9 @@ import com.rentalapp.config.RestAuthenticationEntryPoint;
 import com.rentalapp.common.api.PaginatedResponse;
 import com.rentalapp.config.SecurityConfig;
 import com.rentalapp.exception.GlobalExceptionHandler;
+import com.rentalapp.module.ai.controller.AiAssistController;
+import com.rentalapp.module.ai.dto.InterpretListingSearchResponse;
+import com.rentalapp.module.ai.service.AiAssistService;
 import com.rentalapp.module.auth.controller.AuthController;
 import com.rentalapp.module.auth.service.AuthService;
 import com.rentalapp.module.auth.service.impl.AuthRateLimitService;
@@ -29,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(
-        controllers = {AuthController.class, ListingController.class},
+        controllers = {AuthController.class, ListingController.class, AiAssistController.class},
         excludeAutoConfiguration = UserDetailsServiceAutoConfiguration.class
 )
 @Import({SecurityConfig.class, RestAuthenticationEntryPoint.class, RestAccessDeniedHandler.class, GlobalExceptionHandler.class, JwtAuthenticationFilter.class})
@@ -51,6 +54,9 @@ class PublicRouteSecurityTest {
 
     @MockBean
     private ListingMediaUploadService listingMediaUploadService;
+
+    @MockBean
+    private AiAssistService aiAssistService;
 
     @Test
     void publicListingsEndpointIsAccessibleWithoutAuthentication() throws Exception {
@@ -89,5 +95,28 @@ class PublicRouteSecurityTest {
         mockMvc.perform(get("/api/v1/auth/me"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("AUTH_UNAUTHORIZED"));
+    }
+
+    @Test
+    void aiSearchInterpretEndpointIsAccessibleWithoutAuthentication() throws Exception {
+        when(aiAssistService.interpretListingSearch(any())).thenReturn(InterpretListingSearchResponse.builder()
+                .normalizedQuery("2 bedroom in Kilimani under 50k")
+                .interpreted(true)
+                .provider("heuristic-fallback")
+                .matchedSignals(java.util.List.of("bedrooms", "area", "maxPrice"))
+                .notes(java.util.List.of())
+                .filters(InterpretListingSearchResponse.Filters.builder().amenities(java.util.List.of()).build())
+                .build());
+
+        mockMvc.perform(post("/api/v1/ai/search/interpret")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "query": "2 bedroom in Kilimani under 50k"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.provider").value("heuristic-fallback"));
     }
 }
