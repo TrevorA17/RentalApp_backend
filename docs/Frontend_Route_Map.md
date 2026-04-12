@@ -77,7 +77,7 @@ Current limitation:
 ### Renter flow
 
 1. register or log in
-2. browse listings
+2. browse listings with URL-backed filters, sorting, and pagination
 3. save listings
 4. send inquiries
 5. report suspicious listings if needed
@@ -163,14 +163,16 @@ src/
   - profile details
   - existing public recommendations
   - authenticated recommendation submission form
+- `/listings` keeps filter, page, and sort state in the URL query string
+- authenticated feature requests use a centralized refresh-aware API client
+- expired access tokens are retried once after refresh before the session is cleared
 - listing media is currently managed through URL fields in listing forms
 - the frontend does not currently expose a file-upload media flow
 - suggestions are shown as a signed-in dashboard feature, not as a public trust feature
 
 ## Not yet implemented
 
-- search pagination UI
-- search sorting UI
 - admin recommendation moderation page
+- moderation history UI
 - file-upload based media workflow
 - richer AI workflows beyond description assist

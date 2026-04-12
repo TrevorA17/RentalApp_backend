@@ -117,6 +117,21 @@ Key fields:
 
 Abuse or trust reports on listings or users.
 
+### `moderation_actions`
+
+Internal admin audit trail for moderation actions.
+
+Key fields:
+- `target_type`
+- `target_id`
+- `action_type`
+- `previous_status`
+- `new_status`
+- `reason_or_note`
+- `actor_user_id`
+- `created_at`
+- `updated_at`
+
 ### `agent_recommendations`
 
 Public recommendations/testimonials left on agent profiles.
@@ -167,6 +182,7 @@ This is intentional for MVP simplicity.
 - one `agent` can receive many `agent_recommendations`
 - one `user` can author many `agent_recommendations`
 - one `listing` or `user` can have many `reports`
+- one admin user can create many `moderation_actions`
 
 ## Enums in use
 
@@ -246,6 +262,8 @@ Used by:
 8. `V8__create_ai_request_logs_schema.sql`
 9. `V9__create_refresh_tokens_schema.sql`
 10. `V10__create_agent_recommendations_schema.sql`
+11. `V11__create_moderation_actions_schema.sql`
+12. `V12__add_listing_search_indexes.sql`
 
 ## Current indexing truth
 
@@ -256,16 +274,13 @@ Already present in schema:
 - listing area index
 - listing status index
 - listing approval index
+- listing public visibility and search indexes for published browse
+- listing rent amount, created_at, and published_at indexes for current sort/query paths
 - report indexes
 - agent recommendation public/admin lookup indexes
 
-Known gap:
-- public listing search still needs stronger indexing for price and filter-heavy fields
-- pagination and sorting support are not yet implemented
-
 ## Not yet implemented
 
-- dedicated moderation action audit table
 - dedicated suggestions table
 - real file-upload storage flow
 - vector database integration

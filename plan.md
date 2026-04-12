@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This plan reflects the current state of the MVP after the initial implementation and the terminology correction in Phase 1.
+This plan reflects the current state of the MVP after the later implementation phases, including search, moderation auditability, deployment parity, and frontend session hardening.
 
 Current product vocabulary:
 
@@ -25,6 +25,10 @@ The following vertical slices are implemented:
 10. reports and admin moderation
 11. AI-assisted listing description enhancement
 12. auth hardening and backend test baseline
+13. moderation audit trail
+14. paginated and sorted public search
+15. containerized frontend + backend + postgres stack
+16. centralized refresh-aware frontend API/session client
 
 ## What is implemented now
 
@@ -62,6 +66,8 @@ The following vertical slices are implemented:
 
 - public browse
 - filtering by core fields
+- pagination
+- sorting
 - listing detail pages
 
 ### Saved listings
@@ -96,6 +102,7 @@ The following vertical slices are implemented:
 - listing moderation
 - user status moderation
 - report status updates
+- moderation audit logging for listing, report, and recommendation actions
 
 ### AI assist
 
@@ -107,20 +114,10 @@ The following vertical slices are implemented:
 
 These are the major gaps that still matter:
 
-### Search quality
-
-- pagination not implemented
-- sorting not implemented
-- indexing can be improved for heavy listing search use
-
-### Moderation auditability
-
-- no dedicated `moderation_actions` table yet
-
 ### Deployment completeness
 
-- Docker support is limited to local Postgres
-- no full local stack for backend/frontend/AI services
+- Docker now supports frontend + backend + postgres
+- production concerns like reverse proxy, secrets management, and monitoring are still outside the current MVP setup
 
 ### AI runtime completeness
 
@@ -136,19 +133,19 @@ These are the major gaps that still matter:
 
 - backend moderation routes for agent recommendations exist
 - no frontend admin page for them yet
+- no frontend moderation-history viewer yet
 
 ## Current recommended implementation order from here
 
-1. documentation sync
-2. moderation audit trail
-3. search pagination and sorting
-4. search-related indexing improvements
-5. deployment/docker cleanup
-6. AI scope decision:
+1. documentation sync after the latest behavior changes
+2. admin recommendation moderation UI
+3. moderation history UI
+4. search refinements beyond the current structured browse
+5. AI scope decision:
    - keep current assistive implementation and document phase 2
    - or begin real provider/runtime integration
-7. admin recommendation moderation UI
-8. media/storage strategy improvement
+6. media/storage strategy improvement
+7. production deployment hardening
 
 ## Working rules
 

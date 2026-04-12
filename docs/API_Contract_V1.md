@@ -154,9 +154,33 @@ Current query params:
 - `houseType`
 - `furnished`
 - `amenities`
+- `page`
+- `size`
+- `sort`
 
-Current limitation:
-- pagination and sorting are not yet implemented
+Supported `sort` values:
+- `PUBLISHED_AT_DESC`
+- `RENT_AMOUNT_ASC`
+- `RENT_AMOUNT_DESC`
+- `CREATED_AT_DESC`
+
+Current response shape inside `data`:
+
+```json
+{
+  "items": [],
+  "page": 0,
+  "size": 12,
+  "totalElements": 0,
+  "totalPages": 0,
+  "hasNext": false,
+  "hasPrevious": false,
+  "sort": "PUBLISHED_AT_DESC"
+}
+```
+
+Current visibility rule:
+- public browse returns only `PUBLISHED` + `APPROVED` listings
 
 ### `GET /amenities`
 
@@ -286,8 +310,8 @@ Returns agent recommendations for moderation review.
 
 Updates recommendation approval status.
 
-Current limitation:
-- moderation actions are not yet written to a dedicated audit-history table
+Moderation audit behavior:
+- listing, report, and recommendation status-changing admin actions are written to `moderation_actions`
 
 ## AI Assist
 
@@ -320,6 +344,5 @@ Current non-truth:
 ## Not yet implemented
 
 - standalone file-upload media endpoints
-- search pagination and sorting
-- moderation audit-history table
+- admin route for browsing moderation history
 - full AI provider/vector runtime integration

@@ -16,6 +16,7 @@ This repo is no longer scaffold-only. The backend currently implements:
 - agent recommendations/testimonials on public agent profiles
 - listing suggestions for signed-in users
 - reports and admin moderation
+- moderation audit trail for admin status changes
 - AI-assisted listing description enhancement with request logging
 - Flyway-managed schema migrations
 - backend test coverage for core controllers, services, and security
@@ -54,6 +55,13 @@ This repo is no longer scaffold-only. The backend currently implements:
 - `POST /api/v1/listings/{listingId}/publish`
 - `GET /api/v1/my/listings`
 - `GET /api/v1/amenities`
+
+Public listing browse now supports:
+
+- structured filters
+- pagination via `page` and `size`
+- sorting via `sort`
+- paginated response metadata for the frontend browse experience
 
 ### Saved listings
 
@@ -114,6 +122,14 @@ Environment templates:
 
 - [.env.example](./.env.example)
 
+Required backend env vars outside the local profile defaults:
+
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `APP_CORS_ALLOWED_ORIGINS`
+- `JWT_SECRET`
+
 Key local defaults:
 
 - Postgres on `localhost:5433`
@@ -121,22 +137,32 @@ Key local defaults:
 - username: `postgres`
 - password: `postgres`
 
+For containerized runs, the compose backend service uses `SPRING_PROFILES_ACTIVE=prod` and injects the required env vars directly so it talks to the `postgres` service instead of the local-profile `localhost` defaults.
+
 ## Local development
 
-### Start Postgres
+### Start the full local app stack
 
 ```powershell
 docker compose up -d
 ```
 
-Current Docker support is limited to local Postgres only. This repo does not yet provide a full multi-service local stack for:
+This now starts the currently implemented MVP stack:
 
-- backend container
-- frontend container
-- Qdrant
-- Ollama
+- `postgres` on `localhost:5433`
+- `backend` on `localhost:8080`
+- `frontend` on `localhost:3000`
 
-### Run the backend
+This compose file does not include Qdrant or Ollama because the current app does not require them.
+
+### Run only Postgres with Docker and the backend locally
+
+```powershell
+docker compose up -d postgres
+.\mvnw.cmd spring-boot:run
+```
+
+### Run the backend without Docker
 
 ```powershell
 .\mvnw.cmd spring-boot:run
@@ -162,14 +188,16 @@ Current migrations:
 - `V8__create_ai_request_logs_schema.sql`
 - `V9__create_refresh_tokens_schema.sql`
 - `V10__create_agent_recommendations_schema.sql`
+- `V11__create_moderation_actions_schema.sql`
+- `V12__add_listing_search_indexes.sql`
 
 ## Known limits
 
 - media is URL-based, not file-upload based
-- public listing search does not yet expose pagination or sorting
-- moderation audit history table is not implemented yet
+- Qdrant and Ollama are not part of the working runtime stack yet
 - AI infra beyond heuristic enhancement is not wired yet
-- Docker deployment is not production-complete yet
+- Docker is now suitable for local parity and simple container deployment, but it is not a full production platform setup yet
+- admin recommendation moderation does not yet have a frontend page
 
 ## Source-of-truth docs
 

@@ -111,9 +111,9 @@ Shared infrastructure:
 The original MVP slices have been implemented. New work should focus on:
 
 1. documentation accuracy
-2. search quality
-3. moderation auditability
-4. deployment realism
+2. admin/moderation UI completeness
+3. deployment realism beyond local parity
+4. search refinement beyond the current structured browse
 5. AI/provider decisions only when justified by code and product needs
 
 ## API rules
@@ -133,6 +133,16 @@ The original MVP slices have been implemented. New work should focus on:
 - AI enhancement is advisory only
 - AI failure must not block listing save/publish workflows
 - do not document Qdrant/Ollama integration as present unless code actually wires it
+
+### Current search contract
+
+- public listing browse supports `page`, `size`, and `sort`
+- supported sort values are:
+  - `PUBLISHED_AT_DESC`
+  - `RENT_AMOUNT_ASC`
+  - `RENT_AMOUNT_DESC`
+  - `CREATED_AT_DESC`
+- public browse returns paginated metadata
 
 ## Code structure rules
 
@@ -182,10 +192,11 @@ The original MVP slices have been implemented. New work should focus on:
 - `agent_recommendations` exists
 - `refresh_tokens` exists
 - `listing_media` exists and stores media URLs
+- `moderation_actions` exists for admin audit logging
 
 ### Known schema gaps
 
-- `moderation_actions` audit history table does not exist yet
+- admin-facing moderation history retrieval/view UI does not exist yet
 - search indexing can be improved
 
 ## Security rules
@@ -212,6 +223,13 @@ Every meaningful backend change should preserve:
 - security expectations
 
 Existing backend tests are part of the quality baseline and should continue passing.
+
+## Frontend integration truths
+
+- the frontend uses a centralized API client in `src/lib/api/client.ts`
+- browser session state is shared through `src/lib/auth/sessionStore.ts`
+- protected API requests can refresh once on `401` and retry once
+- failed refresh clears the stored session and should degrade cleanly to re-authentication
 
 ## Documentation discipline
 
