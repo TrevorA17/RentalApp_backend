@@ -31,8 +31,8 @@ public class AgentRecommendation extends BaseEntity {
     @JoinColumn(name = "author_user_id", nullable = false)
     private User authorUser;
 
-    @Column(nullable = false)
-    private int rating;
+    @Column(nullable = false, columnDefinition = "SMALLINT")
+    private short rating;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String comment;

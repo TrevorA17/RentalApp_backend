@@ -3,3 +3,6 @@
 /.vscode/
 *.log
 .env
+.env.*
+!.env.local.example
+!.env.uat.example

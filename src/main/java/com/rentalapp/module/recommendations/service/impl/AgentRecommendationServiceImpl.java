@@ -59,7 +59,7 @@ public class AgentRecommendationServiceImpl implements AgentRecommendationServic
         AgentRecommendation recommendation = new AgentRecommendation();
         recommendation.setAgentUser(agentUser);
         recommendation.setAuthorUser(authorUser);
-        recommendation.setRating(request.getRating());
+        recommendation.setRating((short) request.getRating());
         recommendation.setComment(normalizeComment(request.getComment()));
         recommendation.setApprovalStatus(ApprovalStatus.APPROVED);
 

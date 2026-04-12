@@ -121,7 +121,14 @@ The backend uses Spring profiles with `local` as the default.
 
 Environment templates:
 
-- [.env.example](./.env.example)
+- [.env.local.example](./.env.local.example)
+- [.env.uat.example](./.env.uat.example)
+
+Use them as templates only:
+
+- local backend runs: copy `.env.local.example` to the ignored `.env`
+- UAT-style backend runs: copy `.env.uat.example` to the ignored `.env` or inject the same values through your runtime/platform
+- do not commit real `.env` files
 
 Required backend env vars outside the local profile defaults:
 

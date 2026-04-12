@@ -61,7 +61,7 @@ class AgentRecommendationServiceImplTest {
         recommendation.setAgentUser(agent);
         recommendation.setAuthorUser(author);
         recommendation.setComment("Very reliable");
-        recommendation.setRating(5);
+        recommendation.setRating((short) 5);
 
         UpdateAgentRecommendationApprovalRequest request = new UpdateAgentRecommendationApprovalRequest();
         request.setApprovalStatus(ApprovalStatus.APPROVED);
