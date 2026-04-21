@@ -17,7 +17,7 @@ This repo is no longer scaffold-only. The backend currently implements:
 - listing suggestions for signed-in users
 - reports and admin moderation
 - moderation audit trail for admin status changes
-- AI-assisted listing description enhancement with request logging
+- AI-assisted listing description enhancement and natural-language search interpretation with request logging
 - Flyway-managed schema migrations
 - backend test coverage for core controllers, services, and security
 
@@ -102,11 +102,13 @@ Public listing browse now supports:
 ### AI assist
 
 - `POST /api/v1/ai/listings/description-enhance`
+- `POST /api/v1/ai/search/interpret`
 
 Current AI behavior is intentionally lightweight:
 
 - assistive only
 - heuristic fallback implementation
+- structured search remains the source of truth
 - request logging to Postgres
 
 This repo does not yet contain full Spring AI, Ollama, or Qdrant integration.
@@ -202,11 +204,12 @@ Current migrations:
 - `V10__create_agent_recommendations_schema.sql`
 - `V11__create_moderation_actions_schema.sql`
 - `V12__add_listing_search_indexes.sql`
+- `V13__create_password_reset_tokens_schema.sql`
 
 ## Known limits
 
 - Qdrant and Ollama are not part of the working runtime stack yet
-- AI infra beyond heuristic enhancement is not wired yet
+- AI infra beyond heuristic listing assistance and search interpretation is not wired yet
 - Docker is now suitable for local parity and simple container deployment, but it is not a full production platform setup yet
 - moderation history UI is intentionally lightweight and recent-actions only
 - media uploads are currently image-first and stored on the backend filesystem, not object storage
@@ -217,5 +220,6 @@ Current migrations:
 - [docs/MVP_Data_Model.md](./docs/MVP_Data_Model.md)
 - [docs/API_Contract_V1.md](./docs/API_Contract_V1.md)
 - [docs/Frontend_Route_Map.md](./docs/Frontend_Route_Map.md)
+- [docs/DEMO_GUIDE.md](./docs/DEMO_GUIDE.md)
 - [plan.md](./plan.md)
 - [CLAUDE.md](./CLAUDE.md)
