@@ -7,14 +7,14 @@ import com.rentalapp.config.SecurityConfig;
 import com.rentalapp.exception.GlobalExceptionHandler;
 import com.rentalapp.module.ai.controller.AiAssistController;
 import com.rentalapp.module.ai.dto.InterpretListingSearchResponse;
-import com.rentalapp.module.ai.service.AiAssistService;
+import com.rentalapp.module.ai.service.IAiAssistService;
 import com.rentalapp.module.auth.controller.AuthController;
-import com.rentalapp.module.auth.service.AuthService;
+import com.rentalapp.module.auth.service.IAuthService;
 import com.rentalapp.module.auth.service.impl.AuthRateLimitService;
 import com.rentalapp.module.listings.controller.ListingController;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
-import com.rentalapp.module.listings.service.ListingService;
-import com.rentalapp.module.media.service.ListingMediaUploadService;
+import com.rentalapp.module.listings.service.IListingService;
+import com.rentalapp.module.media.service.IListingMediaUploadService;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,19 +44,19 @@ class PublicRouteSecurityTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @MockBean
-    private AuthService authService;
+    private IAuthService authService;
 
     @MockBean
     private AuthRateLimitService authRateLimitService;
 
     @MockBean
-    private ListingService listingService;
+    private IListingService listingService;
 
     @MockBean
-    private ListingMediaUploadService listingMediaUploadService;
+    private IListingMediaUploadService listingMediaUploadService;
 
     @MockBean
-    private AiAssistService aiAssistService;
+    private IAiAssistService aiAssistService;
 
     @Test
     void publicListingsEndpointIsAccessibleWithoutAuthentication() throws Exception {

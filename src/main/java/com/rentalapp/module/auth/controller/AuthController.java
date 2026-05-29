@@ -11,7 +11,7 @@ import com.rentalapp.module.auth.dto.PasswordResetRequestResponse;
 import com.rentalapp.module.auth.dto.RefreshTokenRequest;
 import com.rentalapp.module.auth.dto.RegisterRequest;
 import com.rentalapp.module.auth.service.impl.AuthRateLimitService;
-import com.rentalapp.module.auth.service.AuthService;
+import com.rentalapp.module.auth.service.IAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    private final AuthService authService;
+    private final IAuthService authService;
     private final AuthRateLimitService authRateLimitService;
 
     @PostMapping("/register")

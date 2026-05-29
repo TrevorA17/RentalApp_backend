@@ -5,7 +5,7 @@ import com.rentalapp.module.ai.dto.EnhanceListingDescriptionRequest;
 import com.rentalapp.module.ai.dto.EnhanceListingDescriptionResponse;
 import com.rentalapp.module.ai.dto.InterpretListingSearchRequest;
 import com.rentalapp.module.ai.dto.InterpretListingSearchResponse;
-import com.rentalapp.module.ai.service.AiAssistService;
+import com.rentalapp.module.ai.service.IAiAssistService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class AiAssistController {
-    private final AiAssistService aiAssistService;
+    private final IAiAssistService aiAssistService;
 
     @PostMapping("/api/v1/ai/listings/description-enhance")
     public ResponseEntity<ApiResponse<EnhanceListingDescriptionResponse>> enhanceListingDescription(

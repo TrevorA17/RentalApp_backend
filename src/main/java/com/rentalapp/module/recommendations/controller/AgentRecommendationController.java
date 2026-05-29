@@ -5,7 +5,7 @@ import com.rentalapp.module.recommendations.dto.AdminAgentRecommendationResponse
 import com.rentalapp.module.recommendations.dto.AgentRecommendationResponse;
 import com.rentalapp.module.recommendations.dto.CreateAgentRecommendationRequest;
 import com.rentalapp.module.recommendations.dto.UpdateAgentRecommendationApprovalRequest;
-import com.rentalapp.module.recommendations.service.AgentRecommendationService;
+import com.rentalapp.module.recommendations.service.IAgentRecommendationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 public class AgentRecommendationController {
-    private final AgentRecommendationService agentRecommendationService;
+    private final IAgentRecommendationService agentRecommendationService;
 
     @PostMapping("/api/v1/agents/{agentUserId}/recommendations")
     public ResponseEntity<ApiResponse<AgentRecommendationResponse>> createRecommendation(

@@ -5,7 +5,7 @@ import com.rentalapp.exception.GlobalExceptionHandler;
 import com.rentalapp.module.auth.dto.AuthResponse;
 import com.rentalapp.module.auth.dto.AuthUserResponse;
 import com.rentalapp.module.auth.entity.Role;
-import com.rentalapp.module.auth.service.AuthService;
+import com.rentalapp.module.auth.service.IAuthService;
 import com.rentalapp.module.auth.service.impl.AuthRateLimitService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
     @Mock
-    private AuthService authService;
+    private IAuthService authService;
 
     @Mock
     private AuthRateLimitService authRateLimitService;

@@ -2,7 +2,7 @@ package com.rentalapp.module.admin.controller;
 
 import com.rentalapp.exception.GlobalExceptionHandler;
 import com.rentalapp.module.admin.dto.AdminUserResponse;
-import com.rentalapp.module.admin.service.AdminModerationService;
+import com.rentalapp.module.admin.service.IAdminModerationService;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.UserStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class AdminModerationControllerTest {
     @Mock
-    private AdminModerationService adminModerationService;
+    private IAdminModerationService adminModerationService;
 
     private MockMvc mockMvc;
 

@@ -2,7 +2,7 @@ package com.rentalapp.module.auth.service.impl;
 
 import com.rentalapp.config.AppSecurityProperties;
 import com.rentalapp.exception.AuthenticationException;
-import com.rentalapp.module.auth.service.LoginAttemptService;
+import com.rentalapp.module.auth.service.ILoginAttemptService;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class InMemoryLoginAttemptService implements LoginAttemptService {
+public class InMemoryLoginAttemptService implements ILoginAttemptService {
     private final AppSecurityProperties appSecurityProperties;
     private final Map<String, AttemptState> attempts = new ConcurrentHashMap<>();
 

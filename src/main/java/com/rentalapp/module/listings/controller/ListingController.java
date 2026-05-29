@@ -8,9 +8,9 @@ import com.rentalapp.module.listings.dto.ListingSearchRequest;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
 import com.rentalapp.module.listings.dto.ListingSortOption;
 import com.rentalapp.module.listings.dto.ListingUpsertRequest;
-import com.rentalapp.module.listings.service.ListingService;
+import com.rentalapp.module.listings.service.IListingService;
 import com.rentalapp.module.media.dto.MediaUploadResponse;
-import com.rentalapp.module.media.service.ListingMediaUploadService;
+import com.rentalapp.module.media.service.IListingMediaUploadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -29,8 +29,8 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 public class ListingController {
-    private final ListingService listingService;
-    private final ListingMediaUploadService listingMediaUploadService;
+    private final IListingService listingService;
+    private final IListingMediaUploadService listingMediaUploadService;
 
     @GetMapping("/api/v1/listings")
     public ResponseEntity<ApiResponse<PaginatedResponse<ListingSummaryResponse>>> searchListings(

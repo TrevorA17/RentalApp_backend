@@ -3,7 +3,7 @@ package com.rentalapp.module.profiles.controller;
 import com.rentalapp.common.api.ApiResponse;
 import com.rentalapp.module.profiles.dto.ProfileResponse;
 import com.rentalapp.module.profiles.dto.ProfileUpsertRequest;
-import com.rentalapp.module.profiles.service.ProfileService;
+import com.rentalapp.module.profiles.service.IProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/profiles")
 @RequiredArgsConstructor
 public class ProfileController {
-    private final ProfileService profileService;
+    private final IProfileService profileService;
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<ProfileResponse>> getMyProfile() {

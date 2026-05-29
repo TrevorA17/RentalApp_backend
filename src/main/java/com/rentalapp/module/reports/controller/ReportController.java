@@ -5,7 +5,7 @@ import com.rentalapp.module.auth.service.impl.AuthRateLimitService;
 import com.rentalapp.module.reports.dto.CreateReportRequest;
 import com.rentalapp.module.reports.dto.ReportResponse;
 import com.rentalapp.module.reports.dto.UpdateReportStatusRequest;
-import com.rentalapp.module.reports.service.ReportService;
+import com.rentalapp.module.reports.service.IReportService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 public class ReportController {
-    private final ReportService reportService;
+    private final IReportService reportService;
     private final AuthRateLimitService authRateLimitService;
 
     @PostMapping("/api/v1/reports")

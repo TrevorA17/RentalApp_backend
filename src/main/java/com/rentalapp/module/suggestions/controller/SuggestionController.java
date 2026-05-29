@@ -2,7 +2,7 @@ package com.rentalapp.module.suggestions.controller;
 
 import com.rentalapp.common.api.ApiResponse;
 import com.rentalapp.module.suggestions.dto.SuggestedListingResponse;
-import com.rentalapp.module.suggestions.service.SuggestionService;
+import com.rentalapp.module.suggestions.service.ISuggestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 public class SuggestionController {
-    private final SuggestionService suggestionService;
+    private final ISuggestionService suggestionService;
 
     @GetMapping("/api/v1/suggestions/listings")
     public ResponseEntity<ApiResponse<List<SuggestedListingResponse>>> getSuggestedListings(

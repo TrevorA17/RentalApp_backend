@@ -2,7 +2,7 @@ package com.rentalapp.module.saved.controller;
 
 import com.rentalapp.common.api.ApiResponse;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
-import com.rentalapp.module.saved.service.SavedListingService;
+import com.rentalapp.module.saved.service.ISavedListingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 public class SavedListingController {
-    private final SavedListingService savedListingService;
+    private final ISavedListingService savedListingService;
 
     @PostMapping("/api/v1/listings/{listingId}/save")
     public ResponseEntity<ApiResponse<Void>> saveListing(@PathVariable String listingId) {

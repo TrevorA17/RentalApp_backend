@@ -2,7 +2,7 @@ package com.rentalapp.module.auth.service.impl;
 
 import com.rentalapp.config.AppSecurityProperties;
 import com.rentalapp.exception.RateLimitExceededException;
-import com.rentalapp.module.auth.service.RateLimitService;
+import com.rentalapp.module.auth.service.IRateLimitService;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class InMemoryRateLimitService implements RateLimitService {
+public class InMemoryRateLimitService implements IRateLimitService {
     private final AppSecurityProperties appSecurityProperties;
     private final Map<String, CounterWindow> windows = new ConcurrentHashMap<>();
 

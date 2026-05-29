@@ -1,16 +1,16 @@
 package com.rentalapp.module.auth.service.impl;
 
 import com.rentalapp.config.AppSecurityProperties;
-import com.rentalapp.module.auth.service.RateLimitService;
+import com.rentalapp.module.auth.service.IRateLimitService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthRateLimitService {
-    private final RateLimitService rateLimitService;
+    private final IRateLimitService rateLimitService;
     private final AppSecurityProperties appSecurityProperties;
 
-    public AuthRateLimitService(RateLimitService rateLimitService, AppSecurityProperties appSecurityProperties) {
+    public AuthRateLimitService(IRateLimitService rateLimitService, AppSecurityProperties appSecurityProperties) {
         this.rateLimitService = rateLimitService;
         this.appSecurityProperties = appSecurityProperties;
     }

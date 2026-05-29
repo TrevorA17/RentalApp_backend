@@ -6,7 +6,7 @@ import com.rentalapp.module.admin.dto.AdminModerationActionResponse;
 import com.rentalapp.module.admin.dto.AdminUserResponse;
 import com.rentalapp.module.admin.dto.UpdateListingApprovalRequest;
 import com.rentalapp.module.admin.dto.UpdateUserStatusRequest;
-import com.rentalapp.module.admin.service.AdminModerationService;
+import com.rentalapp.module.admin.service.IAdminModerationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminModerationController {
-    private final AdminModerationService adminModerationService;
+    private final IAdminModerationService adminModerationService;
 
     @GetMapping("/api/v1/admin/listings")
     public ResponseEntity<ApiResponse<List<AdminListingResponse>>> getListingsForModeration() {

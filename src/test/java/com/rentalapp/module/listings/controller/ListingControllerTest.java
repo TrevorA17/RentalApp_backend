@@ -8,8 +8,8 @@ import com.rentalapp.module.listings.entity.ApprovalStatus;
 import com.rentalapp.module.listings.entity.AvailabilityStatus;
 import com.rentalapp.module.listings.entity.HouseType;
 import com.rentalapp.module.listings.entity.ListingStatus;
-import com.rentalapp.module.listings.service.ListingService;
-import com.rentalapp.module.media.service.ListingMediaUploadService;
+import com.rentalapp.module.listings.service.IListingService;
+import com.rentalapp.module.media.service.IListingMediaUploadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,10 +30,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class ListingControllerTest {
     @Mock
-    private ListingService listingService;
+    private IListingService listingService;
 
     @Mock
-    private ListingMediaUploadService listingMediaUploadService;
+    private IListingMediaUploadService listingMediaUploadService;
 
     private MockMvc mockMvc;
 

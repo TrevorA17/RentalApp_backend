@@ -4,7 +4,7 @@ import com.rentalapp.common.api.ApiResponse;
 import com.rentalapp.module.inquiries.dto.CreateInquiryRequest;
 import com.rentalapp.module.inquiries.dto.InquiryResponse;
 import com.rentalapp.module.inquiries.dto.UpdateInquiryStatusRequest;
-import com.rentalapp.module.inquiries.service.InquiryService;
+import com.rentalapp.module.inquiries.service.IInquiryService;
 import com.rentalapp.module.auth.service.impl.AuthRateLimitService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -22,7 +22,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 public class InquiryController {
-    private final InquiryService inquiryService;
+    private final IInquiryService inquiryService;
     private final AuthRateLimitService authRateLimitService;
 
     @PostMapping("/api/v1/listings/{listingId}/inquiries")
