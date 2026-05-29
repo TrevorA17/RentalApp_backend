@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Setter
@@ -21,6 +22,7 @@ import lombok.Setter;
         @Index(name = "idx_listing_media_listing_id", columnList = "listing_id"),
         @Index(name = "idx_listing_media_display_order", columnList = "listing_id,display_order")
 })
+@SQLRestriction("is_deleted = false")
 public class ListingMedia extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "listing_id", nullable = false)

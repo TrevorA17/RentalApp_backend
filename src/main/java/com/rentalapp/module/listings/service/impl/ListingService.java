@@ -115,6 +115,7 @@ public class ListingService implements IListingService {
                 .and(hasFurnished(request.getFurnished()))
                 .and(hasAmenities(request.getAmenities()));
 
+        int requestedPage = request.getPage() == null ? 1 : Math.max(1, request.getPage());
         Pageable pageable = buildSearchPageable(request);
         Page<Listing> listingsPage = listingRepository.findAll(spec, pageable);
         List<Listing> listings = listingsPage.getContent();
@@ -126,9 +127,9 @@ public class ListingService implements IListingService {
 
         return PaginatedResponse.<ListingSummaryResponse>builder()
                 .items(items)
-                .page(listingsPage.getNumber())
-                .size(listingsPage.getSize())
-                .totalElements(listingsPage.getTotalElements())
+                .currentPage(requestedPage)
+                .perPage(listingsPage.getSize())
+                .totalItems(listingsPage.getTotalElements())
                 .totalPages(listingsPage.getTotalPages())
                 .hasNext(listingsPage.hasNext())
                 .hasPrevious(listingsPage.hasPrevious())
@@ -310,12 +311,10 @@ public class ListingService implements IListingService {
     }
 
     private Pageable buildSearchPageable(ListingSearchRequest request) {
-        int requestedPage = request.getPage() == null ? 0 : request.getPage();
-        int requestedSize = request.getSize() == null ? 12 : request.getSize();
-        int normalizedPage = Math.max(0, requestedPage);
-        int normalizedSize = Math.min(Math.max(1, requestedSize), 24);
+        int requestedPage = request.getPage() == null ? 1 : Math.max(1, request.getPage());
+        int requestedPerPage = request.getPerPage() == null ? 10 : Math.min(Math.max(1, request.getPerPage()), 100);
         ListingSortOption sort = request.getSort() == null ? ListingSortOption.PUBLISHED_AT_DESC : request.getSort();
-        return PageRequest.of(normalizedPage, normalizedSize, sort.toSort());
+        return PageRequest.of(requestedPage - 1, requestedPerPage, sort.toSort());
     }
 
     private ListingSummaryResponse toSummary(Listing listing, List<ListingMedia> media) {

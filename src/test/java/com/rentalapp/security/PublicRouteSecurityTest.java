@@ -62,9 +62,9 @@ class PublicRouteSecurityTest {
     void publicListingsEndpointIsAccessibleWithoutAuthentication() throws Exception {
         when(listingService.searchPublicListings(any())).thenReturn(PaginatedResponse.<ListingSummaryResponse>builder()
                 .items(java.util.List.of())
-                .page(0)
-                .size(12)
-                .totalElements(0)
+                .currentPage(1)
+                .perPage(10)
+                .totalItems(0)
                 .totalPages(0)
                 .hasNext(false)
                 .hasPrevious(false)

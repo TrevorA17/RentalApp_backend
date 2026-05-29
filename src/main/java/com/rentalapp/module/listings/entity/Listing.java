@@ -18,6 +18,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.CascadeType;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -30,6 +31,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "listings")
+@SQLRestriction("is_deleted = false")
 public class Listing extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_user_id", nullable = false)

@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Setter
@@ -22,6 +23,7 @@ import lombok.Setter;
         @Index(name = "idx_agent_recommendations_agent_status", columnList = "agent_user_id, approvalStatus, createdAt"),
         @Index(name = "idx_agent_recommendations_author_user_id", columnList = "author_user_id")
 })
+@SQLRestriction("is_deleted = false")
 public class AgentRecommendation extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "agent_user_id", nullable = false)

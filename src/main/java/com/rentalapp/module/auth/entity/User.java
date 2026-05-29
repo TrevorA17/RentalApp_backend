@@ -9,6 +9,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Setter
@@ -17,6 +18,7 @@ import lombok.Setter;
         @Index(name = "idx_users_email", columnList = "email", unique = true),
         @Index(name = "idx_users_role", columnList = "role")
 })
+@SQLRestriction("is_deleted = false")
 public class User extends BaseEntity {
     @Column(nullable = false, unique = true, length = 255)
     private String email;

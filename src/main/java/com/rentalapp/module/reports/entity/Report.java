@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Setter
@@ -24,6 +25,7 @@ import lombok.Setter;
         @Index(name = "idx_reports_listing_id", columnList = "listing_id"),
         @Index(name = "idx_reports_reported_user_id", columnList = "reported_user_id")
 })
+@SQLRestriction("is_deleted = false")
 public class Report extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "reporter_user_id", nullable = false)

@@ -59,7 +59,9 @@ common/      → BaseEntity, ApiResponse, PaginatedResponse, IdGenerator
 - Custom exception not extending `ApiException`
 - `@Transactional(readOnly = true)` on a method that calls `save(...)`, `delete(...)`, or otherwise persists state — **CRITICAL** bug (Postgres + Hibernate silently drop the write)
 - New `EAGER` `@ManyToOne` / `@OneToMany` — must be `LAZY`
-- Hard-delete operations (`repository.delete(...)`) post-Phase-4 — must be soft delete
+- Hard-delete operations (`repository.delete(...)`) on domain entities — must be soft delete (`setDeleted(true)` + `setDeletedAt(now)` + `setDeletedBy(currentUserId)`). Exempt: `SavedListing` (hard-delete intentional), token tables (own lifecycle), audit logs (immutable).
+- Adding `@SQLRestriction("is_deleted = false")` to a token/audit entity (RefreshToken, PasswordResetToken, ModerationAction, AiRequestLog) — those are deliberately excluded from soft-delete semantics.
+- Native SQL queries on soft-deleted entities that don't include `is_deleted = false` — `@SQLRestriction` doesn't apply to raw native queries; must be added manually.
 
 ### Two-Layer Repository Pattern
 

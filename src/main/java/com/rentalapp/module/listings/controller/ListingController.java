@@ -12,9 +12,12 @@ import com.rentalapp.module.listings.service.IListingService;
 import com.rentalapp.module.media.dto.MediaUploadResponse;
 import com.rentalapp.module.media.service.IListingMediaUploadService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +31,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Validated
 public class ListingController {
     private final IListingService listingService;
     private final IListingMediaUploadService listingMediaUploadService;
@@ -43,8 +47,8 @@ public class ListingController {
             @RequestParam(required = false) com.rentalapp.module.listings.entity.HouseType houseType,
             @RequestParam(required = false) Boolean furnished,
             @RequestParam(required = false) List<String> amenities,
-            @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "12") Integer size,
+            @RequestParam(defaultValue = "1") @Min(1) Integer page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) Integer perPage,
             @RequestParam(defaultValue = "PUBLISHED_AT_DESC") ListingSortOption sort
     ) {
         ListingSearchRequest request = new ListingSearchRequest();
@@ -58,7 +62,7 @@ public class ListingController {
         request.setFurnished(furnished);
         request.setAmenities(amenities);
         request.setPage(page);
-        request.setSize(size);
+        request.setPerPage(perPage);
         request.setSort(sort);
 
         return ResponseEntity.ok(ApiResponse.ok(listingService.searchPublicListings(request)));

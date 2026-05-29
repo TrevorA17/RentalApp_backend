@@ -20,11 +20,11 @@ Primary project docs:
 The conventions in this file describe the **target** state. The codebase is being migrated to match. Status by phase:
 
 - [x] **Phase 0** — This document + `CLAUDE_REVIEW.md`
-- [ ] **Phase 1** — Cheap convention sweep (`@JsonInclude`, `@Validated`, `@PreAuthorize` coverage)
-- [ ] **Phase 2** — Two-layer repository pattern + `I<Service>`/`<Service>` rename
-- [ ] **Phase 3** — `BaseEntity` upgrade (UUID v7, audit fields, version, soft-delete fields)
-- [ ] **Phase 4** — Soft-delete enforcement + cascade-hide queries
-- [ ] **Phase 5** — Pagination contract switch to 1-indexed `page` / `perPage`
+- [x] **Phase 1** — Cheap convention sweep (`@PreAuthorize` on admin endpoints, unified `FORBIDDEN` code, catch-all error logging)
+- [x] **Phase 2** — Two-layer repository pattern (strict ISP) + `I<Service>`/`<Service>` rename
+- [x] **Phase 3** — `BaseEntity` upgrade (UUID v7, audit fields, version, soft-delete fields) + JPA auditing wiring
+- [x] **Phase 4** — Soft-delete enforcement via `@SQLRestriction` + soft-delete policy
+- [x] **Phase 5** — Pagination contract switched to 1-indexed `page` / `perPage` (breaking API change — frontend coordination required)
 - [ ] **Phase 6** — Permission-based authorities
 - [ ] **Phase 7** — Renumber Flyway migrations to timestamps
 
@@ -409,7 +409,7 @@ Line counts are heuristics to trigger a refactor conversation — the real signa
 - **Proper imports** — never use fully-qualified class names inline. Add imports at the top.
 - **Builder pattern** for response DTOs, constructor for entities.
 - **Normalize input** — trim and lowercase emails, normalize blank strings to null.
-- **Soft deletes** (post Phase 4) — never hard-delete. Use `isDeleted` flag.
+- **Soft deletes** — never hard-delete domain entities. Use `entity.setDeleted(true); entity.setDeletedAt(Instant.now()); entity.setDeletedBy(SecurityUtils.requireCurrentUserId());`. Reads are auto-filtered by Hibernate `@SQLRestriction("is_deleted = false")` on each entity. **Exceptions** (kept as hard-delete or excluded from the restriction): `SavedListing` (unfavorite is a user action that should disappear, not be preserved), `RefreshToken`/`PasswordResetToken` (have their own lifecycle: `revokedAt`/`consumedAt`), `ModerationAction`/`AiRequestLog` (immutable audit logs).
 - **Optimistic locking** (post Phase 3) — `@Version` on all entities prevents lost updates.
 - **Idempotent migrations** — use `IF EXISTS` / `IF NOT EXISTS` guards in SQL migrations.
 
@@ -458,9 +458,9 @@ Line counts are heuristics to trigger a refactor conversation — the real signa
 
 #### Current search contract
 
-- Public listing browse supports `page`, `size` (today), and `sort` (renamed to `perPage` in Phase 5).
+- Public listing browse supports `page` (1-indexed, default 1, `@Min(1)`), `perPage` (default 10, `@Min(1) @Max(100)`), and `sort`.
 - Supported sort values: `PUBLISHED_AT_DESC`, `RENT_AMOUNT_ASC`, `RENT_AMOUNT_DESC`, `CREATED_AT_DESC`.
-- Public browse returns paginated metadata.
+- Response wraps results in `PaginatedResponse<T>` with fields: `items`, `currentPage`, `perPage`, `totalItems`, `totalPages`, `hasNext`, `hasPrevious`, `sort`.
 
 ---
 

@@ -20,6 +20,6 @@ public class ListingSearchRequest {
     private Boolean furnished;
     private List<String> amenities;
     private Integer page;
-    private Integer size;
+    private Integer perPage;
     private ListingSortOption sort = ListingSortOption.PUBLISHED_AT_DESC;
 }

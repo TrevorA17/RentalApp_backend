@@ -66,9 +66,9 @@ class ListingControllerTest {
 
         PaginatedResponse<ListingSummaryResponse> response = PaginatedResponse.<ListingSummaryResponse>builder()
                 .items(List.of(listing))
-                .page(0)
-                .size(12)
-                .totalElements(1)
+                .currentPage(1)
+                .perPage(10)
+                .totalItems(1)
                 .totalPages(1)
                 .hasNext(false)
                 .hasPrevious(false)
@@ -80,15 +80,15 @@ class ListingControllerTest {
         mockMvc.perform(get("/api/v1/listings")
                         .param("city", "Nairobi")
                         .param("bedrooms", "1")
-                        .param("page", "0")
-                        .param("size", "12")
+                        .param("page", "1")
+                        .param("perPage", "10")
                         .param("sort", "PUBLISHED_AT_DESC"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.items[0].title").value("Sunny Kilimani Apartment"))
                 .andExpect(jsonPath("$.data.items[0].listingStatus").value("PUBLISHED"))
-                .andExpect(jsonPath("$.data.page").value(0))
-                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.currentPage").value(1))
+                .andExpect(jsonPath("$.data.totalItems").value(1))
                 .andExpect(jsonPath("$.data.sort").value("PUBLISHED_AT_DESC"));
     }
 }

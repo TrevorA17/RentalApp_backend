@@ -13,6 +13,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @Setter
@@ -20,6 +21,7 @@ import lombok.Setter;
 @Table(name = "profiles", indexes = {
         @Index(name = "idx_profiles_user_id", columnList = "user_id", unique = true)
 })
+@SQLRestriction("is_deleted = false")
 public class Profile extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
