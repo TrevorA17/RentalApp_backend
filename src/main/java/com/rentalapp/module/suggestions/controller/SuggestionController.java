@@ -5,6 +5,7 @@ import com.rentalapp.module.suggestions.dto.SuggestedListingResponse;
 import com.rentalapp.module.suggestions.service.ISuggestionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ public class SuggestionController {
     private final ISuggestionService suggestionService;
 
     @GetMapping("/api/v1/suggestions/listings")
+    @PreAuthorize("hasAuthority('SUGGESTION_VIEW')")
     public ResponseEntity<ApiResponse<List<SuggestedListingResponse>>> getSuggestedListings(
             @RequestParam(defaultValue = "3") int limit
     ) {

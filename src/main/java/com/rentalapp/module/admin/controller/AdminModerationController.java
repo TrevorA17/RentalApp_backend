@@ -22,16 +22,17 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminModerationController {
     private final IAdminModerationService adminModerationService;
 
     @GetMapping("/api/v1/admin/listings")
+    @PreAuthorize("hasAuthority('LISTING_MODERATE')")
     public ResponseEntity<ApiResponse<List<AdminListingResponse>>> getListingsForModeration() {
         return ResponseEntity.ok(ApiResponse.ok(adminModerationService.getListingsForModeration()));
     }
 
     @PatchMapping("/api/v1/admin/listings/{listingId}/approval")
+    @PreAuthorize("hasAuthority('LISTING_MODERATE')")
     public ResponseEntity<ApiResponse<AdminListingResponse>> updateListingApproval(
             @PathVariable String listingId,
             @Valid @RequestBody UpdateListingApprovalRequest request
@@ -40,11 +41,13 @@ public class AdminModerationController {
     }
 
     @GetMapping("/api/v1/admin/users")
+    @PreAuthorize("hasAuthority('USER_MODERATE')")
     public ResponseEntity<ApiResponse<List<AdminUserResponse>>> getUsers() {
         return ResponseEntity.ok(ApiResponse.ok(adminModerationService.getUsers()));
     }
 
     @GetMapping("/api/v1/admin/moderation-actions")
+    @PreAuthorize("hasAuthority('MODERATION_AUDIT_VIEW')")
     public ResponseEntity<ApiResponse<List<AdminModerationActionResponse>>> getRecentModerationActions(
             @RequestParam(defaultValue = "20") int limit
     ) {
@@ -52,6 +55,7 @@ public class AdminModerationController {
     }
 
     @PatchMapping("/api/v1/admin/users/{userId}/status")
+    @PreAuthorize("hasAuthority('USER_MODERATE')")
     public ResponseEntity<ApiResponse<AdminUserResponse>> updateUserStatus(
             @PathVariable String userId,
             @Valid @RequestBody UpdateUserStatusRequest request

@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +27,7 @@ public class InquiryController {
     private final AuthRateLimitService authRateLimitService;
 
     @PostMapping("/api/v1/listings/{listingId}/inquiries")
+    @PreAuthorize("hasAuthority('INQUIRY_SEND')")
     public ResponseEntity<ApiResponse<InquiryResponse>> createInquiry(
             @PathVariable String listingId,
             @Valid @RequestBody CreateInquiryRequest request,
@@ -36,16 +38,19 @@ public class InquiryController {
     }
 
     @GetMapping("/api/v1/inquiries/sent")
+    @PreAuthorize("hasAuthority('INQUIRY_VIEW_OWN')")
     public ResponseEntity<ApiResponse<List<InquiryResponse>>> getSentInquiries() {
         return ResponseEntity.ok(ApiResponse.ok(inquiryService.getSentInquiries()));
     }
 
     @GetMapping("/api/v1/inquiries/received")
+    @PreAuthorize("hasAuthority('INQUIRY_VIEW_OWN')")
     public ResponseEntity<ApiResponse<List<InquiryResponse>>> getReceivedInquiries() {
         return ResponseEntity.ok(ApiResponse.ok(inquiryService.getReceivedInquiries()));
     }
 
     @PatchMapping("/api/v1/inquiries/{inquiryId}/status")
+    @PreAuthorize("hasAuthority('INQUIRY_UPDATE_STATUS')")
     public ResponseEntity<ApiResponse<InquiryResponse>> updateInquiryStatus(
             @PathVariable String inquiryId,
             @Valid @RequestBody UpdateInquiryStatusRequest request

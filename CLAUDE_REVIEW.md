@@ -160,7 +160,7 @@ src/validations/        → Yup schemas grouped by domain
 ### Database & Migrations
 
 - **NEVER modify an existing migration file** — create a NEW migration for corrections.
-- Pre-Phase-7: migrations are integer-numbered (`V1`..`V13`). Post-Phase-7: use `./scripts/new-migration.sh "description"` for timestamp-versioned names.
+- Migrations are timestamp-versioned (`V{yyyyMMddHHmmss}__snake_case_description.sql`). Always use `./scripts/new-migration.sh "description"` to create one — it stamps the timestamp in UTC and slugifies the description.
 - Each migration is an incremental change (e.g. `ALTER TABLE ... ADD COLUMN`).
 - Use `IF EXISTS` / `IF NOT EXISTS` guards for idempotent migrations.
 - All queries must respect soft deletes (`is_deleted = false`) after Phase 4.

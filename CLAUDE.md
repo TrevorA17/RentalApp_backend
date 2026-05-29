@@ -25,10 +25,10 @@ The conventions in this file describe the **target** state. The codebase is bein
 - [x] **Phase 3** — `BaseEntity` upgrade (UUID v7, audit fields, version, soft-delete fields) + JPA auditing wiring
 - [x] **Phase 4** — Soft-delete enforcement via `@SQLRestriction` + soft-delete policy
 - [x] **Phase 5** — Pagination contract switched to 1-indexed `page` / `perPage` (breaking API change — frontend coordination required)
-- [ ] **Phase 6** — Permission-based authorities
-- [ ] **Phase 7** — Renumber Flyway migrations to timestamps
+- [x] **Phase 6** — Permission-based authorities via `@PreAuthorize("hasAuthority('...')")`. See `docs/Permission_Catalog.md` for the 22-permission catalog and role mapping.
+- [x] **Phase 7** — Flyway migrations renumbered to `V{yyyyMMddHHmmss}__description.sql`. Helper script: `./scripts/new-migration.sh "description"`.
 
-Until each phase completes, code may still reflect the prior convention. New code should be written to the **target** convention from this file unless explicitly noted.
+The migration is complete. All code now reflects the target conventions. The remaining backlog task (request DTO `@Data` standardization) is style-only and queued to fold into a future PR that touches DTOs.
 
 ---
 
@@ -341,7 +341,7 @@ All custom exceptions extend `ApiException` (which extends `RuntimeException`):
 - JWT-based stateless authentication. Access + refresh token pair.
 - `JwtAuthenticationFilter` validates tokens on every request.
 - Roles: `RENTER`, `AGENT`, `LANDLORD`, `ADMIN`.
-- Method-level authorization via `@PreAuthorize`. Role-based until Phase 6; permission-based authorities (e.g. `CREATE_LISTING`, `MODERATE_LISTING`) after Phase 6.
+- Method-level authorization via `@PreAuthorize("hasAuthority('<PERMISSION>')")`. Permissions are defined in `com.rentalapp.security.Permission` and mapped to roles via `Permission.forRole(...)`. See `docs/Permission_Catalog.md` for the full catalog. `hasRole(...)` checks still work (the principal also emits `ROLE_<role>`) but new code should use `hasAuthority(...)`.
 - `SecurityConfig` disables CSRF, enables CORS, stateless sessions.
 - BCrypt password hashing with strength factor managed by Spring's default `BCryptPasswordEncoder`.
 - Backend-enforced role and ownership rules — never trust client-provided role or ownership.
@@ -427,10 +427,9 @@ Line counts are heuristics to trigger a refactor conversation — the real signa
 ### Schema Changes
 
 - **NEVER modify an existing migration file** — once applied, it's immutable. Editing a migration and running `flyway:repair` only fixes the checksum; it does NOT re-run the SQL.
-- **Always use the script to create migrations:** `./scripts/new-migration.sh "description here"` (added in Phase 7) — it generates timestamp-based version numbers (`YYYYMMDDHHmmss`) so migrations from different branches never collide.
+- **Always use the script to create migrations:** `./scripts/new-migration.sh "description here"` — it generates timestamp-based version numbers (`YYYYMMDDHHmmss` UTC) so migrations from different branches never collide.
 - Each migration is an incremental change.
 - If you need to fix a mistake in an applied migration, create a NEW migration with the corrective DDL.
-- Pre-Phase-7: migrations are integer-numbered (`V1`..`V13`). Post-Phase-7: timestamp-numbered.
 
 ### Backend Commands
 

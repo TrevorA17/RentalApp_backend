@@ -17,6 +17,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -69,16 +70,19 @@ public class ListingController {
     }
 
     @PostMapping("/api/v1/listings")
+    @PreAuthorize("hasAuthority('LISTING_CREATE')")
     public ResponseEntity<ApiResponse<ListingSummaryResponse>> createListing(@Valid @RequestBody ListingUpsertRequest request) {
         return ResponseEntity.ok(ApiResponse.ok("Listing created successfully", listingService.createListing(request)));
     }
 
     @PostMapping(value = "/api/v1/listings/media/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('LISTING_UPLOAD_MEDIA')")
     public ResponseEntity<ApiResponse<MediaUploadResponse>> uploadListingMedia(@RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(ApiResponse.ok("Listing media uploaded successfully", listingMediaUploadService.uploadListingImage(file)));
     }
 
     @PutMapping("/api/v1/listings/{listingId}")
+    @PreAuthorize("hasAuthority('LISTING_UPDATE_OWN')")
     public ResponseEntity<ApiResponse<ListingSummaryResponse>> updateListing(
             @PathVariable String listingId,
             @Valid @RequestBody ListingUpsertRequest request
@@ -87,6 +91,7 @@ public class ListingController {
     }
 
     @PostMapping("/api/v1/listings/{listingId}/publish")
+    @PreAuthorize("hasAuthority('LISTING_PUBLISH_OWN')")
     public ResponseEntity<ApiResponse<ListingSummaryResponse>> publishListing(@PathVariable String listingId) {
         return ResponseEntity.ok(ApiResponse.ok("Listing published successfully", listingService.publishListing(listingId)));
     }
@@ -97,6 +102,7 @@ public class ListingController {
     }
 
     @GetMapping("/api/v1/my/listings")
+    @PreAuthorize("hasAuthority('LISTING_VIEW_OWN')")
     public ResponseEntity<ApiResponse<List<ListingSummaryResponse>>> getMyListings() {
         return ResponseEntity.ok(ApiResponse.ok(listingService.getMyListings()));
     }

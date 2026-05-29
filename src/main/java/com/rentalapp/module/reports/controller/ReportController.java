@@ -27,6 +27,7 @@ public class ReportController {
     private final AuthRateLimitService authRateLimitService;
 
     @PostMapping("/api/v1/reports")
+    @PreAuthorize("hasAuthority('REPORT_SUBMIT')")
     public ResponseEntity<ApiResponse<ReportResponse>> createReport(
             @Valid @RequestBody CreateReportRequest request,
             HttpServletRequest httpRequest
@@ -36,13 +37,13 @@ public class ReportController {
     }
 
     @GetMapping("/api/v1/admin/reports")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('REPORT_MODERATE')")
     public ResponseEntity<ApiResponse<List<ReportResponse>>> getAdminReports() {
         return ResponseEntity.ok(ApiResponse.ok(reportService.getAdminReports()));
     }
 
     @PatchMapping("/api/v1/admin/reports/{reportId}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('REPORT_MODERATE')")
     public ResponseEntity<ApiResponse<ReportResponse>> updateReportStatus(
             @PathVariable String reportId,
             @Valid @RequestBody UpdateReportStatusRequest request

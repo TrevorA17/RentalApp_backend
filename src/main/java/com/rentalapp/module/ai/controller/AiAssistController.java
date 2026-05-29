@@ -9,6 +9,7 @@ import com.rentalapp.module.ai.service.IAiAssistService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,6 +20,7 @@ public class AiAssistController {
     private final IAiAssistService aiAssistService;
 
     @PostMapping("/api/v1/ai/listings/description-enhance")
+    @PreAuthorize("hasAuthority('AI_ASSIST_USE')")
     public ResponseEntity<ApiResponse<EnhanceListingDescriptionResponse>> enhanceListingDescription(
             @Valid @RequestBody EnhanceListingDescriptionRequest request
     ) {

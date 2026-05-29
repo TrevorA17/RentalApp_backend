@@ -25,6 +25,7 @@ public class AgentRecommendationController {
     private final IAgentRecommendationService agentRecommendationService;
 
     @PostMapping("/api/v1/agents/{agentUserId}/recommendations")
+    @PreAuthorize("hasAuthority('RECOMMENDATION_SUBMIT')")
     public ResponseEntity<ApiResponse<AgentRecommendationResponse>> createRecommendation(
             @PathVariable String agentUserId,
             @Valid @RequestBody CreateAgentRecommendationRequest request
@@ -41,13 +42,13 @@ public class AgentRecommendationController {
     }
 
     @GetMapping("/api/v1/admin/recommendations")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('RECOMMENDATION_MODERATE')")
     public ResponseEntity<ApiResponse<List<AdminAgentRecommendationResponse>>> getAdminRecommendations() {
         return ResponseEntity.ok(ApiResponse.ok(agentRecommendationService.getAdminRecommendations()));
     }
 
     @PatchMapping("/api/v1/admin/recommendations/{recommendationId}/approval")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('RECOMMENDATION_MODERATE')")
     public ResponseEntity<ApiResponse<AdminAgentRecommendationResponse>> updateApprovalStatus(
             @PathVariable String recommendationId,
             @Valid @RequestBody UpdateAgentRecommendationApprovalRequest request
