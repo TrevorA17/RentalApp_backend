@@ -6,13 +6,13 @@ import com.rentalapp.module.admin.entity.ModerationTargetType;
 import com.rentalapp.module.admin.service.IModerationAuditService;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.listings.entity.Listing;
-import com.rentalapp.module.listings.repository.ListingRepository;
+import com.rentalapp.module.listings.repository.IListingRepository;
 import com.rentalapp.module.reports.dto.CreateReportRequest;
 import com.rentalapp.module.reports.dto.UpdateReportStatusRequest;
 import com.rentalapp.module.reports.entity.Report;
-import com.rentalapp.module.reports.repository.ReportRepository;
+import com.rentalapp.module.reports.repository.IReportRepository;
 import com.rentalapp.module.reports.service.impl.ReportService;
 import com.rentalapp.security.SecurityUtils;
 import org.junit.jupiter.api.Test;
@@ -35,13 +35,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ReportServiceTest {
     @Mock
-    private ReportRepository reportRepository;
+    private IReportRepository reportRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private IUserRepository userRepository;
 
     @Mock
-    private ListingRepository listingRepository;
+    private IListingRepository listingRepository;
 
     @Mock
     private IModerationAuditService moderationAuditService;

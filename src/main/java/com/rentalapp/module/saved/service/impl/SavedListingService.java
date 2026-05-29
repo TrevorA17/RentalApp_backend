@@ -4,16 +4,16 @@ import com.rentalapp.exception.ForbiddenException;
 import com.rentalapp.exception.ResourceNotFoundException;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.listings.dto.AmenityResponse;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
 import com.rentalapp.module.listings.entity.Amenity;
 import com.rentalapp.module.listings.entity.ApprovalStatus;
 import com.rentalapp.module.listings.entity.Listing;
 import com.rentalapp.module.listings.entity.ListingStatus;
-import com.rentalapp.module.listings.repository.ListingRepository;
+import com.rentalapp.module.listings.repository.IListingRepository;
 import com.rentalapp.module.saved.entity.SavedListing;
-import com.rentalapp.module.saved.repository.SavedListingRepository;
+import com.rentalapp.module.saved.repository.ISavedListingRepository;
 import com.rentalapp.module.saved.service.ISavedListingService;
 import com.rentalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +25,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class SavedListingService implements ISavedListingService {
-    private final SavedListingRepository savedListingRepository;
-    private final ListingRepository listingRepository;
-    private final UserRepository userRepository;
+    private final ISavedListingRepository savedListingRepository;
+    private final IListingRepository listingRepository;
+    private final IUserRepository userRepository;
 
     @Override
     @Transactional

@@ -16,9 +16,9 @@ import com.rentalapp.module.auth.entity.RefreshToken;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
 import com.rentalapp.module.auth.entity.UserStatus;
-import com.rentalapp.module.auth.repository.PasswordResetTokenRepository;
-import com.rentalapp.module.auth.repository.RefreshTokenRepository;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IPasswordResetTokenRepository;
+import com.rentalapp.module.auth.repository.IRefreshTokenRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.auth.service.impl.AuthService;
 import com.rentalapp.module.auth.service.impl.InMemoryLoginAttemptService;
 import com.rentalapp.security.JwtProperties;
@@ -50,13 +50,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
     @Mock
-    private UserRepository userRepository;
+    private IUserRepository userRepository;
 
     @Mock
-    private RefreshTokenRepository refreshTokenRepository;
+    private IRefreshTokenRepository refreshTokenRepository;
 
     @Mock
-    private PasswordResetTokenRepository passwordResetTokenRepository;
+    private IPasswordResetTokenRepository passwordResetTokenRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;

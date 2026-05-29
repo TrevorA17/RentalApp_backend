@@ -4,18 +4,18 @@ import com.rentalapp.exception.ForbiddenException;
 import com.rentalapp.exception.ResourceNotFoundException;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.inquiries.dto.CreateInquiryRequest;
 import com.rentalapp.module.inquiries.dto.InquiryResponse;
 import com.rentalapp.module.inquiries.dto.UpdateInquiryStatusRequest;
 import com.rentalapp.module.inquiries.entity.Inquiry;
 import com.rentalapp.module.inquiries.entity.InquiryStatus;
-import com.rentalapp.module.inquiries.repository.InquiryRepository;
+import com.rentalapp.module.inquiries.repository.IInquiryRepository;
 import com.rentalapp.module.inquiries.service.IInquiryService;
 import com.rentalapp.module.listings.entity.ApprovalStatus;
 import com.rentalapp.module.listings.entity.Listing;
 import com.rentalapp.module.listings.entity.ListingStatus;
-import com.rentalapp.module.listings.repository.ListingRepository;
+import com.rentalapp.module.listings.repository.IListingRepository;
 import com.rentalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,9 +26,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class InquiryService implements IInquiryService {
-    private final InquiryRepository inquiryRepository;
-    private final ListingRepository listingRepository;
-    private final UserRepository userRepository;
+    private final IInquiryRepository inquiryRepository;
+    private final IListingRepository listingRepository;
+    private final IUserRepository userRepository;
 
     @Override
     @Transactional

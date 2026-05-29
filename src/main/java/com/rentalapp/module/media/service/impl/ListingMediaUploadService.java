@@ -5,7 +5,7 @@ import com.rentalapp.exception.ForbiddenException;
 import com.rentalapp.exception.ValidationException;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.media.dto.MediaUploadResponse;
 import com.rentalapp.module.media.entity.MediaType;
 import com.rentalapp.module.media.service.IListingMediaUploadService;
@@ -29,7 +29,7 @@ public class ListingMediaUploadService implements IListingMediaUploadService {
     private static final Set<String> SUPPORTED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
 
     private final AppMediaProperties appMediaProperties;
-    private final UserRepository userRepository;
+    private final IUserRepository userRepository;
 
     @Override
     @Transactional(readOnly = true)

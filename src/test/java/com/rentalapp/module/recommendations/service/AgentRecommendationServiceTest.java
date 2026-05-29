@@ -5,11 +5,11 @@ import com.rentalapp.module.admin.entity.ModerationTargetType;
 import com.rentalapp.module.admin.service.IModerationAuditService;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.listings.entity.ApprovalStatus;
 import com.rentalapp.module.recommendations.dto.UpdateAgentRecommendationApprovalRequest;
 import com.rentalapp.module.recommendations.entity.AgentRecommendation;
-import com.rentalapp.module.recommendations.repository.AgentRecommendationRepository;
+import com.rentalapp.module.recommendations.repository.IAgentRecommendationRepository;
 import com.rentalapp.module.recommendations.service.impl.AgentRecommendationService;
 import com.rentalapp.security.SecurityUtils;
 import org.junit.jupiter.api.Test;
@@ -30,10 +30,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AgentRecommendationServiceTest {
     @Mock
-    private AgentRecommendationRepository agentRecommendationRepository;
+    private IAgentRecommendationRepository agentRecommendationRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private IUserRepository userRepository;
 
     @Mock
     private IModerationAuditService moderationAuditService;

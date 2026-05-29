@@ -3,11 +3,11 @@ package com.rentalapp.module.profiles.service.impl;
 import com.rentalapp.exception.ResourceNotFoundException;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.profiles.dto.ProfileResponse;
 import com.rentalapp.module.profiles.dto.ProfileUpsertRequest;
 import com.rentalapp.module.profiles.entity.Profile;
-import com.rentalapp.module.profiles.repository.ProfileRepository;
+import com.rentalapp.module.profiles.repository.IProfileRepository;
 import com.rentalapp.module.profiles.service.IProfileService;
 import com.rentalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +20,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ProfileService implements IProfileService {
-    private final ProfileRepository profileRepository;
-    private final UserRepository userRepository;
+    private final IProfileRepository profileRepository;
+    private final IUserRepository userRepository;
 
     @Override
     @Transactional(readOnly = true)

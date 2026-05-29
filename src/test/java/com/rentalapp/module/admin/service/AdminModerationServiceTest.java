@@ -6,11 +6,11 @@ import com.rentalapp.module.admin.entity.ModerationTargetType;
 import com.rentalapp.module.admin.service.impl.AdminModerationService;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.listings.entity.ApprovalStatus;
 import com.rentalapp.module.listings.entity.Listing;
 import com.rentalapp.module.listings.entity.ListingStatus;
-import com.rentalapp.module.listings.repository.ListingRepository;
+import com.rentalapp.module.listings.repository.IListingRepository;
 import com.rentalapp.security.SecurityUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,10 +30,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AdminModerationServiceTest {
     @Mock
-    private ListingRepository listingRepository;
+    private IListingRepository listingRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private IUserRepository userRepository;
 
     @Mock
     private IModerationAuditService moderationAuditService;

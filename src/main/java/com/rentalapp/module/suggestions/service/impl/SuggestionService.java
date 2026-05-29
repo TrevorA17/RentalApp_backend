@@ -4,20 +4,20 @@ import com.rentalapp.exception.ForbiddenException;
 import com.rentalapp.exception.ResourceNotFoundException;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
-import com.rentalapp.module.inquiries.repository.InquiryRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
+import com.rentalapp.module.inquiries.repository.IInquiryRepository;
 import com.rentalapp.module.listings.dto.AmenityResponse;
 import com.rentalapp.module.listings.dto.ListingSummaryResponse;
 import com.rentalapp.module.listings.entity.ApprovalStatus;
 import com.rentalapp.module.listings.entity.Listing;
 import com.rentalapp.module.listings.entity.ListingStatus;
-import com.rentalapp.module.listings.repository.ListingRepository;
+import com.rentalapp.module.listings.repository.IListingRepository;
 import com.rentalapp.module.media.dto.ListingMediaResponse;
 import com.rentalapp.module.media.entity.ListingMedia;
-import com.rentalapp.module.media.repository.ListingMediaRepository;
+import com.rentalapp.module.media.repository.IListingMediaRepository;
 import com.rentalapp.module.profiles.entity.Profile;
-import com.rentalapp.module.profiles.repository.ProfileRepository;
-import com.rentalapp.module.saved.repository.SavedListingRepository;
+import com.rentalapp.module.profiles.repository.IProfileRepository;
+import com.rentalapp.module.saved.repository.ISavedListingRepository;
 import com.rentalapp.module.suggestions.dto.SuggestedListingResponse;
 import com.rentalapp.module.suggestions.service.ISuggestionService;
 import com.rentalapp.security.SecurityUtils;
@@ -39,12 +39,12 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class SuggestionService implements ISuggestionService {
-    private final ListingRepository listingRepository;
-    private final ListingMediaRepository listingMediaRepository;
-    private final ProfileRepository profileRepository;
-    private final SavedListingRepository savedListingRepository;
-    private final InquiryRepository inquiryRepository;
-    private final UserRepository userRepository;
+    private final IListingRepository listingRepository;
+    private final IListingMediaRepository listingMediaRepository;
+    private final IProfileRepository profileRepository;
+    private final ISavedListingRepository savedListingRepository;
+    private final IInquiryRepository inquiryRepository;
+    private final IUserRepository userRepository;
 
     @Override
     @Transactional(readOnly = true)

@@ -6,7 +6,7 @@ import com.rentalapp.exception.ResourceNotFoundException;
 import com.rentalapp.exception.ValidationException;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.listings.dto.AmenityResponse;
 import com.rentalapp.module.listings.dto.ListingDetailResponse;
 import com.rentalapp.module.listings.dto.ListingSearchRequest;
@@ -20,9 +20,9 @@ import com.rentalapp.module.listings.entity.ListingStatus;
 import com.rentalapp.module.media.dto.ListingMediaRequest;
 import com.rentalapp.module.media.dto.ListingMediaResponse;
 import com.rentalapp.module.media.entity.ListingMedia;
-import com.rentalapp.module.media.repository.ListingMediaRepository;
-import com.rentalapp.module.listings.repository.AmenityRepository;
-import com.rentalapp.module.listings.repository.ListingRepository;
+import com.rentalapp.module.media.repository.IListingMediaRepository;
+import com.rentalapp.module.listings.repository.IAmenityRepository;
+import com.rentalapp.module.listings.repository.IListingRepository;
 import com.rentalapp.module.listings.service.IListingService;
 import com.rentalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -45,10 +45,10 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class ListingService implements IListingService {
-    private final ListingRepository listingRepository;
-    private final AmenityRepository amenityRepository;
-    private final ListingMediaRepository listingMediaRepository;
-    private final UserRepository userRepository;
+    private final IListingRepository listingRepository;
+    private final IAmenityRepository amenityRepository;
+    private final IListingMediaRepository listingMediaRepository;
+    private final IUserRepository userRepository;
 
     @Override
     @Transactional

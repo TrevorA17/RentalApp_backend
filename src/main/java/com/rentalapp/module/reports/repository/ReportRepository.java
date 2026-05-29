@@ -6,7 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface ReportRepository extends JpaRepository<Report, String> {
+public interface ReportRepository extends JpaRepository<Report, String>, IReportRepository {
+    @Override
     @EntityGraph(attributePaths = {"reporterUser", "reportedUser", "listing", "listing.ownerUser"})
     List<Report> findAllByOrderByCreatedAtDesc();
 }

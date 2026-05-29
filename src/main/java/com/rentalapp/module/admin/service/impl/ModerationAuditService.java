@@ -4,10 +4,10 @@ import com.rentalapp.exception.ResourceNotFoundException;
 import com.rentalapp.module.admin.entity.ModerationAction;
 import com.rentalapp.module.admin.entity.ModerationActionType;
 import com.rentalapp.module.admin.entity.ModerationTargetType;
-import com.rentalapp.module.admin.repository.ModerationActionRepository;
+import com.rentalapp.module.admin.repository.IModerationActionRepository;
 import com.rentalapp.module.admin.service.IModerationAuditService;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,8 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class ModerationAuditService implements IModerationAuditService {
-    private final ModerationActionRepository moderationActionRepository;
-    private final UserRepository userRepository;
+    private final IModerationActionRepository moderationActionRepository;
+    private final IUserRepository userRepository;
 
     @Override
     @Transactional

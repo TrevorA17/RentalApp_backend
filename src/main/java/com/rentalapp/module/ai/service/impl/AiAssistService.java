@@ -8,12 +8,12 @@ import com.rentalapp.module.ai.dto.EnhanceListingDescriptionResponse;
 import com.rentalapp.module.ai.dto.InterpretListingSearchRequest;
 import com.rentalapp.module.ai.dto.InterpretListingSearchResponse;
 import com.rentalapp.module.ai.entity.AiRequestLog;
-import com.rentalapp.module.ai.repository.AiRequestLogRepository;
+import com.rentalapp.module.ai.repository.IAiRequestLogRepository;
 import com.rentalapp.module.ai.service.IAiAssistService;
 import com.rentalapp.module.ai.service.AiAssistProvider;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
-import com.rentalapp.module.listings.repository.AmenityRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
+import com.rentalapp.module.listings.repository.IAmenityRepository;
 import com.rentalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,9 +25,9 @@ public class AiAssistService implements IAiAssistService {
     private static final String LISTING_DESCRIPTION_USE_CASE = "LISTING_DESCRIPTION_ENHANCE";
     private static final String SEARCH_INTERPRET_USE_CASE = "LISTING_SEARCH_INTERPRET";
 
-    private final AiRequestLogRepository aiRequestLogRepository;
-    private final UserRepository userRepository;
-    private final AmenityRepository amenityRepository;
+    private final IAiRequestLogRepository aiRequestLogRepository;
+    private final IUserRepository userRepository;
+    private final IAmenityRepository amenityRepository;
     private final AiAssistProvider aiAssistProvider;
     private final ObjectMapper objectMapper;
 

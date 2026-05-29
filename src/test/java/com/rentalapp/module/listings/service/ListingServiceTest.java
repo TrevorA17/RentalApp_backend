@@ -4,7 +4,7 @@ import com.rentalapp.exception.ForbiddenException;
 import com.rentalapp.exception.ValidationException;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.listings.dto.ListingUpsertRequest;
 import com.rentalapp.module.listings.entity.Amenity;
 import com.rentalapp.module.listings.entity.ApprovalStatus;
@@ -12,10 +12,10 @@ import com.rentalapp.module.listings.entity.AvailabilityStatus;
 import com.rentalapp.module.listings.entity.HouseType;
 import com.rentalapp.module.listings.entity.Listing;
 import com.rentalapp.module.listings.entity.ListingStatus;
-import com.rentalapp.module.listings.repository.AmenityRepository;
-import com.rentalapp.module.listings.repository.ListingRepository;
+import com.rentalapp.module.listings.repository.IAmenityRepository;
+import com.rentalapp.module.listings.repository.IListingRepository;
 import com.rentalapp.module.listings.service.impl.ListingService;
-import com.rentalapp.module.media.repository.ListingMediaRepository;
+import com.rentalapp.module.media.repository.IListingMediaRepository;
 import com.rentalapp.security.SecurityUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,16 +38,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ListingServiceTest {
     @Mock
-    private ListingRepository listingRepository;
+    private IListingRepository listingRepository;
 
     @Mock
-    private AmenityRepository amenityRepository;
+    private IAmenityRepository amenityRepository;
 
     @Mock
-    private ListingMediaRepository listingMediaRepository;
+    private IListingMediaRepository listingMediaRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private IUserRepository userRepository;
 
     @InjectMocks
     private ListingService listingService;

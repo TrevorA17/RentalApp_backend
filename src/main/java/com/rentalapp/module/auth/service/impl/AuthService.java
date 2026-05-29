@@ -16,9 +16,9 @@ import com.rentalapp.module.auth.entity.RefreshToken;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
 import com.rentalapp.module.auth.entity.UserStatus;
-import com.rentalapp.module.auth.repository.PasswordResetTokenRepository;
-import com.rentalapp.module.auth.repository.RefreshTokenRepository;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IPasswordResetTokenRepository;
+import com.rentalapp.module.auth.repository.IRefreshTokenRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.auth.service.IAuthService;
 import com.rentalapp.module.auth.service.ILoginAttemptService;
 import com.rentalapp.config.AppSecurityProperties;
@@ -41,9 +41,9 @@ import java.util.UUID;
 public class AuthService implements IAuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
-    private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final IUserRepository userRepository;
+    private final IRefreshTokenRepository refreshTokenRepository;
+    private final IPasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final ILoginAttemptService loginAttemptService;

@@ -7,14 +7,14 @@ import com.rentalapp.module.admin.entity.ModerationTargetType;
 import com.rentalapp.module.admin.service.IModerationAuditService;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.listings.entity.Listing;
-import com.rentalapp.module.listings.repository.ListingRepository;
+import com.rentalapp.module.listings.repository.IListingRepository;
 import com.rentalapp.module.reports.dto.CreateReportRequest;
 import com.rentalapp.module.reports.dto.ReportResponse;
 import com.rentalapp.module.reports.dto.UpdateReportStatusRequest;
 import com.rentalapp.module.reports.entity.Report;
-import com.rentalapp.module.reports.repository.ReportRepository;
+import com.rentalapp.module.reports.repository.IReportRepository;
 import com.rentalapp.module.reports.service.IReportService;
 import com.rentalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +26,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class ReportService implements IReportService {
-    private final ReportRepository reportRepository;
-    private final UserRepository userRepository;
-    private final ListingRepository listingRepository;
+    private final IReportRepository reportRepository;
+    private final IUserRepository userRepository;
+    private final IListingRepository listingRepository;
     private final IModerationAuditService moderationAuditService;
 
     @Override

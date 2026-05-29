@@ -8,14 +8,14 @@ import com.rentalapp.module.admin.entity.ModerationTargetType;
 import com.rentalapp.module.admin.service.IModerationAuditService;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
-import com.rentalapp.module.auth.repository.UserRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
 import com.rentalapp.module.listings.entity.ApprovalStatus;
 import com.rentalapp.module.recommendations.dto.AgentRecommendationResponse;
 import com.rentalapp.module.recommendations.dto.AdminAgentRecommendationResponse;
 import com.rentalapp.module.recommendations.dto.CreateAgentRecommendationRequest;
 import com.rentalapp.module.recommendations.dto.UpdateAgentRecommendationApprovalRequest;
 import com.rentalapp.module.recommendations.entity.AgentRecommendation;
-import com.rentalapp.module.recommendations.repository.AgentRecommendationRepository;
+import com.rentalapp.module.recommendations.repository.IAgentRecommendationRepository;
 import com.rentalapp.module.recommendations.service.IAgentRecommendationService;
 import com.rentalapp.security.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +27,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AgentRecommendationService implements IAgentRecommendationService {
-    private final AgentRecommendationRepository agentRecommendationRepository;
-    private final UserRepository userRepository;
+    private final IAgentRecommendationRepository agentRecommendationRepository;
+    private final IUserRepository userRepository;
     private final IModerationAuditService moderationAuditService;
 
     @Override

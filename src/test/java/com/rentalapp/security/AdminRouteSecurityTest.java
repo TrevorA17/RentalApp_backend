@@ -5,14 +5,14 @@ import com.rentalapp.config.RestAuthenticationEntryPoint;
 import com.rentalapp.config.SecurityConfig;
 import com.rentalapp.exception.GlobalExceptionHandler;
 import com.rentalapp.module.admin.controller.AdminModerationController;
-import com.rentalapp.module.admin.repository.ModerationActionRepository;
+import com.rentalapp.module.admin.repository.IModerationActionRepository;
 import com.rentalapp.module.admin.service.IModerationAuditService;
 import com.rentalapp.module.admin.service.impl.AdminModerationService;
 import com.rentalapp.module.auth.entity.Role;
 import com.rentalapp.module.auth.entity.User;
 import com.rentalapp.module.auth.entity.UserStatus;
-import com.rentalapp.module.auth.repository.UserRepository;
-import com.rentalapp.module.listings.repository.ListingRepository;
+import com.rentalapp.module.auth.repository.IUserRepository;
+import com.rentalapp.module.listings.repository.IListingRepository;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,16 +43,16 @@ class AdminRouteSecurityTest {
     private JwtTokenProvider jwtTokenProvider;
 
     @MockBean
-    private ListingRepository listingRepository;
+    private IListingRepository listingRepository;
 
     @MockBean
-    private UserRepository userRepository;
+    private IUserRepository userRepository;
 
     @MockBean
     private IModerationAuditService moderationAuditService;
 
     @MockBean
-    private ModerationActionRepository moderationActionRepository;
+    private IModerationActionRepository moderationActionRepository;
 
     @Test
     void adminUsersEndpointRejectsAnonymousRequests() throws Exception {
