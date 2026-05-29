@@ -29,7 +29,7 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
         objectMapper.writeValue(
                 response.getOutputStream(),
                 GlobalExceptionHandler.ErrorResponse.of(
-                        "AUTH_FORBIDDEN",
+                        "FORBIDDEN",
                         "You do not have permission to perform this action.",
                         null
                 )

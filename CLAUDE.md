@@ -1,20 +1,36 @@
 # Claude Code Instructions for RentalApp
 
-Rental house hunting platform focused on rentals only.
+Rental house hunting platform focused on rentals only. This is the **single source of truth** for both backend and frontend repos.
 
-Backend repo:
-- `RentalApp_backend/`
-
-Sibling frontend repo:
-- `RentalApp_Frontend/`
+- **Backend repo:** `RentalApp_backend/`
+- **Frontend repo:** `RentalApp_Frontend/` (sibling directory)
 
 Primary project docs:
 
-- [Rental_App_Final_Detailed_BRD.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\Rental_App_Final_Detailed_BRD.md)
-- [docs/MVP_Data_Model.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\docs\MVP_Data_Model.md)
-- [docs/API_Contract_V1.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\docs\API_Contract_V1.md)
-- [docs/Frontend_Route_Map.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\docs\Frontend_Route_Map.md)
-- [plan.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\plan.md)
+- [Rental_App_Final_Detailed_BRD.md](./Rental_App_Final_Detailed_BRD.md)
+- [docs/MVP_Data_Model.md](./docs/MVP_Data_Model.md)
+- [docs/API_Contract_V1.md](./docs/API_Contract_V1.md)
+- [docs/Frontend_Route_Map.md](./docs/Frontend_Route_Map.md)
+- [plan.md](./plan.md)
+
+---
+
+## Migration status (in progress)
+
+The conventions in this file describe the **target** state. The codebase is being migrated to match. Status by phase:
+
+- [x] **Phase 0** — This document + `CLAUDE_REVIEW.md`
+- [ ] **Phase 1** — Cheap convention sweep (`@JsonInclude`, `@Validated`, `@PreAuthorize` coverage)
+- [ ] **Phase 2** — Two-layer repository pattern + `I<Service>`/`<Service>` rename
+- [ ] **Phase 3** — `BaseEntity` upgrade (UUID v7, audit fields, version, soft-delete fields)
+- [ ] **Phase 4** — Soft-delete enforcement + cascade-hide queries
+- [ ] **Phase 5** — Pagination contract switch to 1-indexed `page` / `perPage`
+- [ ] **Phase 6** — Permission-based authorities
+- [ ] **Phase 7** — Renumber Flyway migrations to timestamps
+
+Until each phase completes, code may still reflect the prior convention. New code should be written to the **target** convention from this file unless explicitly noted.
+
+---
 
 ## Product boundaries
 
@@ -52,186 +68,536 @@ These names must stay consistent:
 
 Do not reintroduce ambiguous naming.
 
-## Backend architecture
+---
 
-Stack currently in use:
+## Error Handling Policy
+
+- **All user-facing error messages originate from the backend** — the frontend must NEVER hardcode error strings.
+- Backend returns errors via `ApiResponse` with `code` and `message` fields, mapped centrally by `GlobalExceptionHandler`.
+- Frontend extracts and displays the backend message via a shared `extractApiError(err)` helper — never invent error text on the client side.
+- Validation errors (field-level) come from Jakarta Bean Validation on backend DTOs and are surfaced as-is.
+
+---
+
+## Backend
+
+### Technology Stack
 
 - Java 21
-- Spring Boot 3.x
+- Spring Boot 3.4
 - Spring Security
 - Spring Data JPA
-- PostgreSQL
+- PostgreSQL 16
 - Flyway
+- Lombok, Jakarta Bean Validation
+- JWT (jjwt 0.12.6), BCrypt
+- UUID v7 IDs (post Phase 3), soft deletes (post Phase 4), optimistic locking (post Phase 3)
 
-Current AI truth:
+### Architecture & SOLID Principles
 
-- lightweight assistive enhancement endpoint exists
-- request logging exists
-- full Spring AI + Ollama + Qdrant integration does not yet exist in code
+#### Package Structure
 
-System design rules:
+- **Package by feature** — each feature lives under `module/<feature>/` containing entity, repository (custom interface + Spring Data impl), service interface, service implementation, controller, and DTOs.
+- **Infrastructure** lives in `config/`, `security/`, `exception/`, `common/`.
+- Spring profiles: `local` (default), `prod`. `test` is implicit for the test suite.
 
-- modular monolith
-- package by feature
-- clear module boundaries
-- AI must remain optional and non-blocking
+#### Single Responsibility (SRP)
 
-Preferred backend structure:
+- **Controllers** are thin — routing + `@PreAuthorize` authorization + delegation only. Zero business logic.
+- **Services** own business logic and transactions. One service per feature domain.
+- **Repositories** handle data access only. No business rules in queries.
+- **DTOs** are data carriers only — no behavior, no business logic.
+- **Entities** represent domain state + JPA mappings. Convenience getters are acceptable; no business logic.
 
-- `module/<feature>/controller`
-- `module/<feature>/dto`
-- `module/<feature>/entity`
-- `module/<feature>/repository`
-- `module/<feature>/service`
-- `module/<feature>/service/impl`
+#### Open/Closed (OCP)
 
-Shared infrastructure:
+- Extend behavior through new service methods and new DTOs — don't modify existing method signatures that other code depends on.
+- Add new enum values via Flyway migrations — never rename or remove existing enum values without a migration.
+- New features get new modules under `module/` — don't bloat existing modules.
 
-- `config`
-- `security`
-- `exception`
-- `common`
+#### Liskov Substitution (LSP)
 
-## Current backend modules
+- All entities extend `BaseEntity` and honor its contract (soft deletes, auditing, UUID v7 IDs, optimistic locking).
+- All custom exceptions extend `ApiException` — the global handler depends on this hierarchy.
+- All services implement their `I<Service>` interface — any implementation must fulfill the full contract.
 
-- `auth`
-- `profiles`
-- `listings`
-- `saved`
-- `inquiries`
-- `recommendations`
-- `suggestions`
-- `admin`
-- `reports`
-- `media`
-- `ai`
+#### Interface Segregation (ISP)
 
-## Delivery approach
+- **Service interfaces** (`IAuthService`, `IListingService`) define focused contracts per feature — never a god-interface.
+- **Repository interfaces** (`IUserRepository`) define the custom query contract separately from Spring's `JpaRepository`.
+- Clients depend on the interface, not the implementation.
 
-The original MVP slices have been implemented. New work should focus on:
+#### Dependency Inversion (DIP)
 
-1. documentation accuracy
-2. admin/moderation UI completeness
-3. deployment realism beyond local parity
-4. search refinement beyond the current structured browse
-5. AI/provider decisions only when justified by code and product needs
+- **Constructor injection only** — never `@Autowired` field or setter injection.
+- Services depend on interfaces (`IUserRepository`, `IListingRepository`), not concrete classes.
+- Configuration and infrastructure wired via Spring — no `new` for managed beans.
 
-## API rules
+### Current backend modules
 
-- base path is `/api/v1`
-- all APIs should stay aligned with [docs/API_Contract_V1.md](C:\Users\Trevor\Documents\GitHub\RentalApp_backend\docs\API_Contract_V1.md)
-- do not expose JPA entities directly
-- use DTOs for requests and responses
-
-### Current media contract
-
-- listing media is URL-based in listing create/update payloads
-- do not document or implement upload endpoints unless that workflow is intentionally introduced
-
-### Current AI contract
-
-- AI enhancement is advisory only
-- AI failure must not block listing save/publish workflows
-- do not document Qdrant/Ollama integration as present unless code actually wires it
-
-### Current search contract
-
-- public listing browse supports `page`, `size`, and `sort`
-- supported sort values are:
-  - `PUBLISHED_AT_DESC`
-  - `RENT_AMOUNT_ASC`
-  - `RENT_AMOUNT_DESC`
-  - `CREATED_AT_DESC`
-- public browse returns paginated metadata
-
-## Code structure rules
-
-### Controllers
-
-- thin
-- routing and validation only
-- no business logic
-
-### Services
-
-- own business rules
-- own transactions
-- interfaces plus implementations where useful
-
-### Repositories
-
-- persistence only
-- no buried business rules
-
-### DTOs
-
-- request DTOs use Jakarta validation
-- response DTOs are explicit
-- no entity leakage
+- `auth`, `profiles`, `listings`, `saved`, `inquiries`, `recommendations`, `suggestions`, `admin`, `reports`, `media`, `ai`
 
 ### Entities
 
-- persistent domain state only
-- string-backed enums
-- prefer `LAZY` relationships
+#### BaseEntity contract (target — Phase 3)
 
-### Dependency injection
+All entities extend `BaseEntity` which provides:
 
-- constructor injection only
+- `id` (String, UUID v7 via `IdGenerator.newId()`) — auto-generated `@PrePersist`
+- `isDeleted`, `deletedAt`, `deletedBy` — soft delete support
+- `createdBy`, `updatedBy` — JPA auditing from `SecurityContext`
+- `version` — optimistic locking (`@Version`)
+- `createdAt`, `updatedAt` — auto timestamps
 
-## Data and persistence rules
+#### Entity conventions
 
-- UUID primary keys
-- Flyway for schema changes
-- add new migrations instead of editing applied ones
-- use indexes where query patterns justify them
-- avoid over-normalization when a simpler MVP field is better
+```java
+@Entity
+@Table(name = "listings")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+public class Listing extends BaseEntity {
+    @Column(nullable = false, length = 255)
+    private String title;
 
-### Current schema truths
+    @ManyToOne(fetch = FetchType.LAZY)       // ALWAYS LAZY — never EAGER
+    @JoinColumn(name = "owner_id")
+    private User owner;
 
-- `agent_recommendations` exists
-- `refresh_tokens` exists
-- `listing_media` exists and stores media URLs
-- `moderation_actions` exists for admin audit logging
+    @Enumerated(EnumType.STRING)             // String-backed enums
+    @Column(nullable = false, length = 30)
+    private ListingStatus status = ListingStatus.DRAFT;
+}
+```
 
-### Known schema gaps
+- **LAZY fetch everywhere** — no EAGER. Use `@EntityGraph` or JOIN queries when related data is needed.
+- Tables and columns are **snake_case** (Spring/Postgres default). DB identifiers are unquoted.
+- Enums are stored as `VARCHAR` via `@Enumerated(EnumType.STRING)` — not Postgres native enum types. (Deliberate divergence from Swirra; simpler for this MVP.)
+- Lombok: `@Getter @Setter @NoArgsConstructor @AllArgsConstructor` on entities.
 
-- admin-facing moderation history retrieval/view UI does not exist yet
-- search indexing can be improved
+#### Naming conventions
 
-## Security rules
+| Identifier | Convention | Examples |
+|---|---|---|
+| Java fields, parameters, locals | `camelCase` | `listingId`, `createdAt`, `isPublished` |
+| Java classes, enums, records | `PascalCase` | `ListingService`, `ListingStatus`, `MediaUploadResponse` |
+| Java packages | `lowercase.singleword` | `com.rentalapp.module.listings` |
+| Constants | `UPPER_SNAKE_CASE` | `MAX_PAGE_SIZE`, `DEFAULT_SORT` |
+| DB tables | `snake_case` | `users`, `listings`, `listing_media` |
+| DB columns | `snake_case` | `created_at`, `owner_id`, `is_deleted` |
+| Enum values (in DB + JSON) | `UPPER_SNAKE_CASE` | `'DRAFT'`, `'PUBLISHED'`, `'PENDING_REVIEW'` |
+| Indexes | `idx_<table>_<cols>` | `idx_listings_city` |
+| Unique indexes / constraints | `uq_<table>_<cols>` | `uq_users_email` |
+| Foreign keys | `fk_<table>_<col>` | `fk_listing_media_listing_id` |
+| Flyway migration files | `V{yyyyMMddHHmmss}__{snake_case_description}.sql` (post Phase 7) | `V20260530101500__add_listing_audit_fields.sql` |
 
-- JWT-based auth
-- BCrypt password hashing
-- backend-enforced role and ownership rules
-- no trust in client-provided role or ownership
+### Repositories (two-layer — target, Phase 2)
 
-### Agent recommendation rules
+```java
+// Custom interface — services depend on THIS
+public interface IUserRepository {
+    Optional<User> findByEmailAndIsDeletedFalse(String email);
+    Page<User> findActiveWithFilters(String search, Pageable pageable);
+}
 
-- only authenticated users can submit
-- self-recommendations are blocked
-- admin users cannot submit public recommendations
-- one recommendation per author per agent in MVP
+// Spring Data implementation — extends BOTH JpaRepository and the custom interface
+public interface UserRepository extends JpaRepository<User, String>, IUserRepository {
+    @Query("SELECT u FROM User u WHERE u.email = :email AND u.isDeleted = false")
+    Optional<User> findByEmailAndIsDeletedFalse(@Param("email") String email);
+}
+```
 
-## Testing expectations
+- All queries must respect soft deletes (`isDeleted = false`) once Phase 4 lands.
+- Return `Optional<T>` for single results, `Page<T>` for paginated.
+- Native queries are allowed but kept rare — prefer JPQL for portability.
 
-Every meaningful backend change should preserve:
+### DTOs
 
-- controller validation behavior
-- service business rules
-- authorization and ownership checks
-- security expectations
+```java
+// Request DTOs — validated with Jakarta annotations
+@Data @NoArgsConstructor @AllArgsConstructor
+public class CreateListingRequest {
+    @NotBlank(message = "Title is required")
+    @Size(max = 255) private String title;
 
-Existing backend tests are part of the quality baseline and should continue passing.
+    @NotNull @DecimalMin("0") private BigDecimal rentAmount;
+}
 
-## Frontend integration truths
+// Response DTOs — built with @Builder
+@Data @Builder @NoArgsConstructor @AllArgsConstructor
+public class ListingResponse {
+    private String id;
+    private String title;
+    private BigDecimal rentAmount;
+    private Instant publishedAt;
+}
+```
 
-- the frontend uses a centralized API client in `src/lib/api/client.ts`
-- browser session state is shared through `src/lib/auth/sessionStore.ts`
-- protected API requests can refresh once on `401` and retry once
-- failed refresh clears the stored session and should degrade cleanly to re-authentication
+- Use Lombok `@Data`, `@Builder`, `@NoArgsConstructor`, `@AllArgsConstructor`.
+- Jakarta Bean Validation on request DTOs — validation messages are user-facing.
+- Response DTOs use `@Builder` for clean construction.
+- Nested DTOs as static inner classes when tightly coupled.
+- Never expose entity objects directly in API responses.
 
-## Documentation discipline
+### Services
+
+```java
+public interface IListingService {
+    ListingResponse createListing(CreateListingRequest request);
+    ListingResponse getListing(String listingId);
+}
+
+@Service
+public class ListingService implements IListingService {
+    private final IListingRepository listingRepository;
+    private final IUserRepository userRepository;
+
+    public ListingService(IListingRepository listingRepository,
+                          IUserRepository userRepository) {  // Constructor injection
+        this.listingRepository = listingRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    @Transactional
+    public ListingResponse createListing(CreateListingRequest request) {
+        // Business logic, validation, entity creation
+    }
+}
+```
+
+- **Constructor injection only** — never `@Autowired` on fields.
+- **`@Transactional`** on methods that write data. `@Transactional(readOnly = true)` only on methods that truly perform no writes. **Mixing `readOnly = true` with any `save()` is a critical bug** — Postgres rejects writes on a read-only connection and Hibernate silently drops persists.
+- Throw custom exceptions for business rule violations (`ValidationException`, `ResourceNotFoundException`, `ForbiddenException`).
+- Use factory methods on exceptions where they exist: `AuthenticationException.invalidCredentials()`.
+- Null-guard partial updates: `if (request.getField() != null) entity.setField(request.getField())`.
+
+### Controllers
+
+```java
+@RestController
+@RequestMapping("/api/v1/listings")
+@Validated
+public class ListingController {
+    private final IListingService listingService;
+
+    public ListingController(IListingService listingService) {
+        this.listingService = listingService;
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAuthority('CREATE_LISTING')")
+    public ResponseEntity<ApiResponse<ListingResponse>> create(
+            @Valid @RequestBody CreateListingRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok("Listing created",
+                listingService.createListing(request)));
+    }
+}
+```
+
+- **Zero business logic** — controllers only route, authorize, and delegate.
+- All endpoints return `ResponseEntity<ApiResponse<T>>` or `ResponseEntity<PaginatedResponse<T>>`.
+- `@PreAuthorize` for method-level authorization. Permission-based authorities land in Phase 6; until then, role-based checks (`hasRole('ADMIN')`) are acceptable, but methods must still be annotated explicitly.
+- `@Valid` on request bodies; `@Min`/`@Max` on query params (requires `@Validated` on the class).
+
+### Pagination (target — Phase 5)
+
+- **Every list endpoint that can grow must be paginated** — server-side via `PaginatedResponse<T>`.
+- Non-paginated list endpoints are only acceptable for small, bounded datasets (e.g. amenity dropdowns).
+- Pattern: `GET /resource?page=1&perPage=10&search=...&filterField=...`
+- `@RequestParam(defaultValue = "1") @Min(1) int page` and `@RequestParam(defaultValue = "10") @Min(1) @Max(100) int perPage`.
+- Service builds `PageRequest.of(page - 1, perPage)` (Spring is 0-indexed, the API is 1-indexed).
+- Return `PaginatedResponse.from(resultPage, page)` with `items`, `currentPage`, `totalPages`, `totalItems`, `perPage`.
+- Supported sort values for public listing browse: `PUBLISHED_AT_DESC`, `RENT_AMOUNT_ASC`, `RENT_AMOUNT_DESC`, `CREATED_AT_DESC`.
+
+### Exception Handling
+
+All custom exceptions extend `ApiException` (which extends `RuntimeException`):
+
+- **`ValidationException`** — `400 BAD_REQUEST` for business rule / input violations
+- **`ResourceNotFoundException`** — `404 NOT_FOUND`
+- **`AuthenticationException`** — `401 UNAUTHORIZED`
+- **`ForbiddenException`** — `403 FORBIDDEN`
+- **`RateLimitExceededException`** — `429 TOO_MANY_REQUESTS`
+
+`GlobalExceptionHandler` (`@RestControllerAdvice`) catches everything and returns:
+
+```json
+{ "success": false, "code": "VALIDATION_ERROR", "message": "...", "errors": {}, "timestamp": "..." }
+```
+
+- Use static factory methods where they exist: `AuthenticationException.invalidCredentials()`.
+- Jakarta validation errors are auto-mapped to a field-level error map.
+- Never catch exceptions silently — let them propagate to the global handler.
+
+### Common Utilities
+
+- **`ApiResponse<T>`** — `@JsonInclude(NON_NULL)`. Factory methods: `ApiResponse.ok(data)`, `ApiResponse.ok(message, data)`.
+- **`PaginatedResponse<T>`** — Built from Spring `Page<T>` via `PaginatedResponse.from(page, requestedPage)`.
+- **`IdGenerator`** (post Phase 3) — Thread-safe UUID v7: `IdGenerator.newId()`. Used by `BaseEntity.onCreate()`.
+- **`SecurityUtils`** — Static helpers: `requireCurrentUserId()`, `hasRole()`, `currentUserOrNull()`.
+
+### Security
+
+- JWT-based stateless authentication. Access + refresh token pair.
+- `JwtAuthenticationFilter` validates tokens on every request.
+- Roles: `RENTER`, `AGENT`, `LANDLORD`, `ADMIN`.
+- Method-level authorization via `@PreAuthorize`. Role-based until Phase 6; permission-based authorities (e.g. `CREATE_LISTING`, `MODERATE_LISTING`) after Phase 6.
+- `SecurityConfig` disables CSRF, enables CORS, stateless sessions.
+- BCrypt password hashing with strength factor managed by Spring's default `BCryptPasswordEncoder`.
+- Backend-enforced role and ownership rules — never trust client-provided role or ownership.
+
+#### Agent recommendation rules
+
+- Only authenticated users can submit.
+- Self-recommendations are blocked.
+- Admin users cannot submit public recommendations.
+- One recommendation per author per agent in MVP.
+
+#### Auth-flow safety rules
+
+- **`@Transactional(readOnly = true)` is forbidden on any method that persists a token, audit row, or any other write** — Postgres + Hibernate silently drop the INSERT on a read-only connection, leaving you with an unusable token in the JWT and no DB row. All login / refresh / logout / password-reset methods that touch `refresh_tokens` or `password_reset_tokens` must be `@Transactional` (writable).
+- Integration tests (real DB, not mocked repos) must cover the full `login → refresh → logout` cycle to prevent regressions of the above.
+
+### Code Quality Rules
+
+#### Logging Policy
+
+- Only add logs for critical errors that need debugging.
+- Never add debug/trace logs in production code.
+- Never log sensitive data (passwords, tokens, PII, payment-like data).
+- Use MDC context (requestId, clientIp) for log correlation when added.
+
+#### Testing
+
+- Every feature module must have tests.
+- Unit tests: `*Test.java` (run with surefire) — `@WebMvcTest` for controllers, Mockito mocks for collaborators.
+- Integration tests: `*IT.java` (run with failsafe) — `@SpringBootTest` + a real DB (Testcontainers or the local Postgres) + real JWT signing.
+- **Tests must assert observable behavior, not echo their own setup.** A test whose only assertion is `verify(mock).method()` *or* that re-asserts a value that came from `when(...).thenReturn(...)` is a tautology — it passes whether the production code is correct or not. Assert on: values the service *derived* (not stubbed), exception types and messages, persisted entity state, JWT contents, response status + body **shape** (e.g. tokens absent on `/me`, not values copied through). Reserve `verify(...)` for side-effects (`repository.save`, `tokenBlacklist.save`, etc.).
+- **What controller (`@WebMvcTest`) tests are for**: validation (400 on bad input, correct field-level error code), authorization (401/403 on missing or insufficient authority), routing/content-type, response-shape contracts. Do not assert payload values that originate from a mocked service — that's serialization plumbing, not your contract.
+- When a single mock-heavy unit test is testing many internal-collaborator interactions for one user-visible flow, prefer one `*IT.java` that exercises real DB state and real JWT signing. Strong candidates here: the entire auth flow (login → refresh → logout), listing publish + moderation, recommendation submission rules.
+
+#### File & Method Length
+
+Line counts are heuristics to trigger a refactor conversation — the real signal is **responsibility count**.
+
+**Per-file targets (by layer):**
+- **Controllers** — < 200 lines. Pure routing + `@PreAuthorize` + delegation.
+- **Services** — 200–400 lines ideal, 500 soft ceiling. Split when handling multiple sub-domains.
+- **Repositories** — < 200 lines.
+- **Entities** — < 200 lines. No business logic.
+- **DTOs** — < 150 lines.
+- **Hard ceiling: ~1,000 lines** for any Java file — almost always a God class.
+
+**Per-method targets:**
+- **Ideal: 5–20 lines.**
+- **Soft ceiling: 30 lines** — extract helpers beyond this.
+- **Hard ceiling: 50 lines** — refactor before merging.
+
+**Signals (not line counts):**
+- A class name needs "and" to describe it → split.
+- Private helpers outnumber public methods 3:1 → those helpers may be a separate collaborator.
+- A method has > 3 levels of nesting → extract or invert with early returns.
+
+**What NOT to do:**
+- Don't split a file just to hit a line count — cohesive code beats scattered code.
+- Don't extract a one-call private method "for cleanliness" — inline beats premature abstraction.
+
+#### General Conventions
+
+- **No field injection** — constructor injection only.
+- **No `@Autowired`** — Spring resolves single-constructor beans automatically.
+- **Proper imports** — never use fully-qualified class names inline. Add imports at the top.
+- **Builder pattern** for response DTOs, constructor for entities.
+- **Normalize input** — trim and lowercase emails, normalize blank strings to null.
+- **Soft deletes** (post Phase 4) — never hard-delete. Use `isDeleted` flag.
+- **Optimistic locking** (post Phase 3) — `@Version` on all entities prevents lost updates.
+- **Idempotent migrations** — use `IF EXISTS` / `IF NOT EXISTS` guards in SQL migrations.
+
+### Feature Development Flow
+
+1. **Design entity** — fields, relationships, types.
+2. **Write Flyway migration** — translate entity into SQL (`CREATE TABLE`).
+3. **Entity class** — annotate with JPA mappings, extend `BaseEntity`.
+4. **Repository** — custom interface (`IFooRepository`) + Spring Data impl (`FooRepository`).
+5. **DTOs** — request (with Jakarta validation) + response (with `@Builder`).
+6. **Service interface + implementation** — business logic, transactions, exception handling.
+7. **Controller** — thin routing, `@PreAuthorize`, delegation.
+8. **Tests** — controller tests with `@WebMvcTest` for validation/authz/shape; integration test (`*IT.java`) for the end-to-end flow against a real DB.
+
+### Schema Changes
+
+- **NEVER modify an existing migration file** — once applied, it's immutable. Editing a migration and running `flyway:repair` only fixes the checksum; it does NOT re-run the SQL.
+- **Always use the script to create migrations:** `./scripts/new-migration.sh "description here"` (added in Phase 7) — it generates timestamp-based version numbers (`YYYYMMDDHHmmss`) so migrations from different branches never collide.
+- Each migration is an incremental change.
+- If you need to fix a mistake in an applied migration, create a NEW migration with the corrective DDL.
+- Pre-Phase-7: migrations are integer-numbered (`V1`..`V13`). Post-Phase-7: timestamp-numbered.
+
+### Backend Commands
+
+```bash
+./mvnw clean compile
+./mvnw test
+./mvnw verify
+./mvnw spring-boot:run
+```
+
+### Current truths to preserve
+
+#### Current media contract
+
+- Listing media is stored on the backend filesystem and served from `/media/...`.
+- An upload endpoint exists: `POST /api/v1/listings/media/upload` (multipart, 5 MB cap, JPEG/PNG/WebP).
+- Media URLs are attached to listings via listing create/update payloads.
+
+#### Current AI contract
+
+- AI enhancement is **advisory only**.
+- AI failure must not block listing save/publish workflows.
+- Heuristic provider only — no Spring AI / Ollama / Qdrant integration in code yet.
+- Do not document Qdrant/Ollama integration as present unless code actually wires it.
+
+#### Current search contract
+
+- Public listing browse supports `page`, `size` (today), and `sort` (renamed to `perPage` in Phase 5).
+- Supported sort values: `PUBLISHED_AT_DESC`, `RENT_AMOUNT_ASC`, `RENT_AMOUNT_DESC`, `CREATED_AT_DESC`.
+- Public browse returns paginated metadata.
+
+---
+
+## Frontend
+
+### Technology Stack
+
+- Next.js 16 (App Router)
+- React 19, TypeScript
+- Material UI (MUI) v7
+- Zustand for state, Formik + Yup for forms
+- Axios (with `axios-retry`)
+- Biome for linting + formatting
+
+### Project Structure
+
+```
+src/
+  app/                  → Next.js App Router routes (route folders + page.tsx)
+  layouts/              → Layout wrappers (Dashboard shell, public shell, etc.)
+  components/
+    common/             → Shared/reusable components
+    {feature}/          → Feature-specific components (auth/, listings/, admin/)
+  features/             → Feature-scoped logic, hooks, sub-components
+  hooks/                → Custom React hooks (useAuth, useListings, etc.)
+  lib/
+    api/
+      client.ts         → Axios instance (base URL, interceptors, token refresh)
+      {feature}.ts      → API service functions (listings.ts, auth.ts, …)
+    auth/
+      sessionStore.ts   → Shared browser session state
+  stores/               → Zustand stores
+  theme/                → MUI theme configuration
+  types/                → TypeScript interfaces grouped by domain (auth.ts, listings.ts)
+  validations/          → Yup schemas grouped by domain
+```
+
+### Architecture Rules
+
+- **Routes are thin**: `src/app/**/page.tsx` only imports and renders a feature component from `components/` or `features/`. No business logic in route files.
+- **Data flow**: `Route → Component → Hook → API service (lib/api/) → Backend`.
+- **Types go in `types/`** — never define interfaces inline in components.
+- **Validation goes in `validations/`** — Yup schemas are separate from types. Narrow component-local schemas (≤5 fields, single-component use) are acceptable inline; any reused domain schema must live in `validations/`.
+- **Stores go in `stores/`** — Zustand stores are standalone files; hooks consume them.
+- **API services go in `lib/api/`** — pure functions, no React. All use the shared `client.ts` Axios instance.
+- Protected API requests may refresh once on `401` and retry once. Failed refresh clears the stored session and degrades cleanly to re-authentication.
+
+### Styling Rules
+
+- Use MUI's `sx` prop or `styled()` for all styling. Never Tailwind, never raw CSS.
+- **All components must use MUI** — no Tailwind.
+- **Border radius**: Global `borderRadius: 8` in the theme. Do NOT add manual border-radius via `sx` unless overriding.
+- **Elevation**: `elevation: 0` is global. Do NOT add `elevation={0}` manually.
+- **Responsive design**: All pages MUST be mobile-responsive. Use MUI responsive props/breakpoints. Never use fixed widths that break on mobile.
+
+### Conventions
+
+- Use named exports for hooks, default exports for components.
+- Import MUI components from specific paths: `import Button from "@mui/material/Button"` (not `import { Button } from "@mui/material"`).
+- Use `@/` path alias for all imports.
+- Environment variables read via `process.env.NEXT_PUBLIC_*` (Next.js convention).
+- Server components are the default in App Router; mark client components with `"use client"` explicitly only where needed (state, effects, browser APIs).
+
+### Reusable Form Components
+
+Always use these wrappers instead of raw `TextField` / `Select` / `DatePicker` in forms:
+
+- **`CustomTextField`** — Formik-wired text field.
+- **`CustomSelect`** — Formik-wired select.
+- **`CustomMultiSelect`** — Multi-select with chip display and checkbox menu items.
+- **`CustomButton`** — Button with built-in loading spinner.
+- **`CustomDatePicker`** — Formik-wired date picker using `@mui/x-date-pickers`. Never use `<TextField type="date" />` or raw `<DatePicker>`.
+- **`CustomSearchTextField`** — Standalone search input (no Formik). Pill-shaped with search icon.
+- **`CustomDataGrid`** — Wraps `@mui/x-data-grid`. Supports `loading`, `searchable`, `title`.
+
+If a wrapper does not yet exist for a control you need, create it in `components/common/` rather than reaching for raw MUI in feature code.
+
+### Frontend Commands
+
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run format
+```
+
+---
+
+## Shared Rules
+
+### Role Policy
+
+- `RENTER` — browses listings, saves, sends inquiries, submits public recommendations on agents.
+- `AGENT` — manages own listings, receives inquiries, has a public profile that receives recommendations.
+- `LANDLORD` — manages own listings, receives inquiries.
+- `ADMIN` — moderation, user status, recommendation approval. Admins cannot submit public recommendations or create listings.
+
+Backend enforces every role and ownership rule; the frontend role display is purely cosmetic.
+
+### Compact Code Style
+
+- Write concise, compact code. Avoid unnecessary vertical whitespace and verbose patterns.
+- Keep methods/components short and focused — extract helpers when they grow beyond ~30 lines.
+- Prefer inline conditionals and early returns over deeply nested if/else.
+- Chain builder calls / inline props on fewer lines when they fit within ~120 characters.
+- Avoid redundant comments that restate what the code already says.
+- **Never one-prop-per-line** in JSX unless the component has complex expressions or exceeds ~120 chars.
+
+### Development Workflow
+
+#### Step 1: Plan Before Implementing
+
+- **Every non-trivial task starts with a plan.** Identify affected files, outline the approach, consider edge cases.
+- For bug fixes: investigate root cause first, then plan the fix. Never jump straight to code changes.
+- For refactors: map all usages and downstream impacts before touching code.
+
+#### Step 2: Implement
+
+- Follow all conventions documented in this file strictly.
+- For complex tasks, delegate to a domain-matched senior engineer agent (backend / frontend / full-stack).
+
+#### Step 3: Critic / Fix Cycle
+
+- **After every implementation or fix**, run the critic/fix cycle:
+  1. Critic: reviews all new/changed code against `CLAUDE_REVIEW.md` — security, correctness, architecture, edge cases, conventions.
+  2. Fix: addresses every issue identified.
+- No implementation is complete until it passes this cycle.
+
+#### Step 4: Verify
+
+- **Backend (mandatory)**: After every backend change, run BOTH:
+  1. `./mvnw clean compile` (build must pass)
+  2. `./mvnw test` (full test suite must pass)
+  Neither is optional. A backend change is not complete until both succeed.
+- **Frontend (mandatory)**: After every frontend change, run `npm run build` — must pass.
+
+### Documentation discipline
 
 When behavior changes:
 
@@ -243,7 +609,7 @@ When behavior changes:
 
 The docs must remain trustworthy.
 
-## Decision heuristics
+### Decision heuristics
 
 Prefer:
 

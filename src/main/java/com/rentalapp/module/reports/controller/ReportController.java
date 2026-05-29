@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,11 +36,13 @@ public class ReportController {
     }
 
     @GetMapping("/api/v1/admin/reports")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<ReportResponse>>> getAdminReports() {
         return ResponseEntity.ok(ApiResponse.ok(reportService.getAdminReports()));
     }
 
     @PatchMapping("/api/v1/admin/reports/{reportId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<ReportResponse>> updateReportStatus(
             @PathVariable String reportId,
             @Valid @RequestBody UpdateReportStatusRequest request

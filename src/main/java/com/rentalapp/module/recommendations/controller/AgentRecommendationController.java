@@ -9,6 +9,7 @@ import com.rentalapp.module.recommendations.service.AgentRecommendationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,11 +41,13 @@ public class AgentRecommendationController {
     }
 
     @GetMapping("/api/v1/admin/recommendations")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<AdminAgentRecommendationResponse>>> getAdminRecommendations() {
         return ResponseEntity.ok(ApiResponse.ok(agentRecommendationService.getAdminRecommendations()));
     }
 
     @PatchMapping("/api/v1/admin/recommendations/{recommendationId}/approval")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<AdminAgentRecommendationResponse>> updateApprovalStatus(
             @PathVariable String recommendationId,
             @Valid @RequestBody UpdateAgentRecommendationApprovalRequest request

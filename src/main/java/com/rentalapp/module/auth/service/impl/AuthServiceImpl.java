@@ -73,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse login(LoginRequest request, String clientKey) {
         String normalizedEmail = request.getEmail().trim().toLowerCase();
         loginAttemptService.ensureLoginAllowed(normalizedEmail, clientKey);
