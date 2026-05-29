@@ -1,14 +1,16 @@
 package com.rentalapp.module.listings.dto;
 
 import com.rentalapp.module.listings.entity.HouseType;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ListingSearchRequest {
     private String city;
     private String area;

@@ -5,14 +5,16 @@ import com.rentalapp.module.listings.entity.HouseType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class EnhanceListingDescriptionRequest {
     @NotBlank(message = "Title is required.")
     @Size(max = 200, message = "Title must not exceed 200 characters.")
